@@ -1,0 +1,4141 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Portable AI - Fast Chat</title>
+    <!-- Vendor assets (downloaded offline by platform installer) -->
+    <link rel="stylesheet" href="./vendor/fa-all.min.css" />
+    <link rel="stylesheet" href="./vendor/highlight-github-dark.min.css" />
+    <script src="./vendor/marked.min.js"></script>
+    <script src="./vendor/highlight.min.js"></script>
+    <style>
+      /* ── Local fonts (installed by platform installer) ─────── */
+      @font-face {
+        font-family: 'Inter';
+        src: url('./vendor/Inter-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Inter';
+        src: url('./vendor/Inter-Medium.woff2') format('woff2');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Inter';
+        src: url('./vendor/Inter-SemiBold.woff2') format('woff2');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Inter';
+        src: url('./vendor/Inter-Bold.woff2') format('woff2');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('./vendor/JetBrainsMono-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('./vendor/JetBrainsMono-Medium.woff2') format('woff2');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      /* Override Font Awesome font paths to use local vendor files */
+      @font-face {
+        font-family: 'Font Awesome 6 Free';
+        font-style: normal;
+        font-weight: 900;
+        font-display: block;
+        src: url('./vendor/fa-solid-900.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Font Awesome 6 Free';
+        font-style: normal;
+        font-weight: 400;
+        font-display: block;
+        src: url('./vendor/fa-regular-400.woff2') format('woff2');
+      }
+      /* Tailwind responsive utilities (minimal subset used by this file) */
+      .hidden {
+        display: none !important;
+      }
+      @media (min-width: 640px) {
+        .sm\:inline {
+          display: inline !important;
+        }
+      }
+      @media (min-width: 768px) {
+        .md\:flex {
+          display: flex !important;
+        }
+        .md\:hidden {
+          display: none !important;
+        }
+      }
+    </style>
+
+    <style>
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           DESIGN TOKENS ÔÇö Gemini/ChatGPT hybrid palette
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      :root {
+        --font: 'Inter', sans-serif;
+        --sb-w: 260px;
+        --spd: 0.2s;
+        --radius: 12px;
+        --radius-lg: 18px;
+        --radius-pill: 999px;
+      }
+
+      [data-theme='dark'] {
+        /* Backgrounds ÔÇö ChatGPT layering */
+        --bg: #212121;
+        --bg2: #171717;
+        --bg3: #2a2a2a;
+        --bg-u: #2f2f2f;
+        --bg-inp: #2f2f2f;
+
+        /* Hovers */
+        --bgh: rgba(255, 255, 255, 0.07);
+        --bga: rgba(255, 255, 255, 0.1);
+
+        /* Text */
+        --t1: #ececec;
+        --t2: #a0a0a0;
+        --t3: #6b6b6b;
+
+        /* Borders */
+        --bd: #3a3a3a;
+        --bd2: #555555;
+
+        /* Code & misc */
+        --code: #1a1a1a;
+        --scr: #555;
+        --shd: rgba(0, 0, 0, 0.5);
+        --ov: rgba(0, 0, 0, 0.6);
+        --tst: #3a3a3a;
+
+        /* Brand gradient ÔÇö Gemini palette */
+        --grad1: #4285f4;
+        --grad2: #9b72cb;
+        --grad3: #d96570;
+
+        /* Status */
+        --green: #6dd58c;
+        --red: #f28b82;
+        --orange: #fdb039;
+      }
+
+      [data-theme='light'] {
+        --bg: #ffffff;
+        --bg2: #f4f4f4;
+        --bg3: #ebebeb;
+        --bg-u: #f0f0f0;
+        --bg-inp: #f4f4f4;
+
+        --bgh: rgba(0, 0, 0, 0.05);
+        --bga: rgba(0, 0, 0, 0.08);
+
+        --t1: #1a1a1a;
+        --t2: #5f5f5f;
+        --t3: #9a9a9a;
+
+        --bd: #e0e0e0;
+        --bd2: #c0c0c0;
+
+        --code: #f5f5f5;
+        --scr: #c0c0c0;
+        --shd: rgba(0, 0, 0, 0.08);
+        --ov: rgba(0, 0, 0, 0.3);
+        --tst: #2a2a2a;
+
+        --grad1: #4285f4;
+        --grad2: #9b72cb;
+        --grad3: #d96570;
+
+        --green: #1e8e3e;
+        --red: #d93025;
+        --orange: #f29900;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           RESET + BASE
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--t1);
+        font-size: 15px;
+        line-height: 1.6;
+        transition:
+          background var(--spd),
+          color var(--spd);
+        -webkit-font-smoothing: antialiased;
+      }
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--scr);
+        border-radius: 4px;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           LAYOUT SHELL
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #app {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           SIDEBAR ÔÇö ChatGPT flavour
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #sidebar {
+        width: var(--sb-w);
+        min-width: var(--sb-w);
+        background: var(--bg2);
+        border-right: 1px solid var(--bd);
+        display: flex;
+        flex-direction: column;
+        transition:
+          transform var(--spd) ease,
+          min-width var(--spd) ease,
+          width var(--spd) ease;
+        z-index: 50;
+        overflow: hidden;
+      }
+      #sidebar.off {
+        transform: translateX(-100%);
+        min-width: 0;
+        width: 0;
+        pointer-events: none;
+      }
+
+      /* Sidebar header */
+      .sb-hd {
+        padding: 16px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .sb-brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 6px 8px;
+      }
+      .sb-brand-icon {
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(
+          135deg,
+          var(--grad1),
+          var(--grad2),
+          var(--grad3)
+        );
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .sb-brand-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .sb-brand-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--t1);
+        letter-spacing: -0.3px;
+      }
+
+      /* New chat button */
+      .nc-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--bd);
+        background: transparent;
+        color: var(--t2);
+        font-family: var(--font);
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          background var(--spd),
+          border-color var(--spd),
+          color var(--spd);
+      }
+      .nc-btn:hover {
+        background: var(--bgh);
+        border-color: var(--bd2);
+        color: var(--t1);
+      }
+      .nc-btn i {
+        font-size: 13px;
+      }
+
+      /* Conversation list */
+      .sb-section-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--t3);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 10px 14px 4px;
+      }
+      .sb-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 8px;
+      }
+      .cv {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.13s;
+        margin-bottom: 1px;
+        position: relative;
+      }
+      .cv:hover {
+        background: var(--bgh);
+      }
+      .cv.act {
+        background: var(--bga);
+      }
+      .cv .ci {
+        font-size: 13px;
+        color: var(--t3);
+        flex-shrink: 0;
+      }
+      .cv .ct {
+        flex: 1;
+        font-size: 13px;
+        color: var(--t2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cv.act .ct {
+        color: var(--t1);
+      }
+      .cv .cd {
+        opacity: 0;
+        background: none;
+        border: none;
+        color: var(--t3);
+        cursor: pointer;
+        padding: 4px 5px;
+        border-radius: 6px;
+        transition:
+          opacity 0.15s,
+          color 0.15s;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .cv:hover .cd {
+        opacity: 1;
+      }
+      .cv .cd:hover {
+        color: var(--red);
+      }
+
+      /* Sidebar footer */
+      .sb-ft {
+        padding: 10px 12px;
+        border-top: 1px solid var(--bd);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .sf-btn {
+        background: none;
+        border: none;
+        color: var(--t3);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sf-btn:hover {
+        background: var(--bgh);
+        color: var(--t1);
+      }
+      .sf-sp {
+        flex: 1;
+      }
+
+      /* Overlay */
+      #overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--ov);
+        z-index: 45;
+      }
+      #overlay.on {
+        display: block;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           MAIN PANEL
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        position: relative;
+        background: var(--bg);
+      }
+
+      /* ÔöÇÔöÇ Topbar ÔöÇÔöÇ */
+      #topbar {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        gap: 10px;
+        flex-shrink: 0;
+        z-index: 10;
+        min-height: 56px;
+      }
+      .tb-btn {
+        background: none;
+        border: none;
+        color: var(--t3);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        font-size: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tb-btn:hover {
+        background: var(--bgh);
+        color: var(--t1);
+      }
+      .tb-title {
+        font-size: 14.5px;
+        font-weight: 500;
+        color: var(--t2);
+        user-select: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+      }
+      .tb-sp {
+        flex: 1;
+      }
+
+      /* System Prompt button in topbar */
+      #sys-prompt-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        border: 1px solid var(--bd);
+        border-radius: var(--radius-pill);
+        padding: 6px 14px;
+        font-size: 12.5px;
+        color: var(--t2);
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          color 0.15s;
+        font-family: var(--font);
+        font-weight: 500;
+      }
+      #sys-prompt-btn:hover {
+        background: var(--bgh);
+        border-color: var(--bd2);
+        color: var(--t1);
+      }
+      #sys-prompt-btn.has-global {
+        color: var(--grad1);
+        border-color: rgba(66, 133, 244, 0.35);
+      }
+
+      /* HW Stats bar */
+      .hw-bar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: var(--bg3);
+        padding: 5px 12px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--bd);
+      }
+      .hw-stat {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--t3);
+        font-weight: 500;
+      }
+      .hw-mini-track {
+        width: 28px;
+        height: 3px;
+        background: var(--bd);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .hw-mini-bar {
+        height: 100%;
+        border-radius: 2px;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.6s ease;
+      }
+      .hw-mini-bar.cpu {
+        background: var(--grad1);
+      }
+      .hw-mini-bar.ram {
+        background: var(--grad2);
+      }
+      .hw-pct {
+        min-width: 28px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .hw-pct.warn {
+        color: var(--orange);
+      }
+      .hw-pct.danger {
+        color: var(--red);
+      }
+
+    /* System Prompt Panel */
+    #sys-panel {
+      display: none;
+      background: var(--bg2);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--bd);
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeSlideDown 0.2s ease;
+    }
+
+    #sys-panel.open {
+      display: flex;
+    }
+
+    @keyframes fadeSlideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .sys-row {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .sys-row label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--t2);
+      letter-spacing: 0.01em;
+    }
+
+    #sys-ta {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--bd);
+      color: var(--t1);
+      font-size: 13.5px;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      resize: none;
+      height: 64px;
+      font-family: var(--font);
+      outline: none;
+      transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+    }
+
+    #sys-ta:focus {
+      border-color: var(--bd2);
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.12);
+    }
+
+    .sys-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sys-divider {
+      border: 0;
+      border-top: 1px solid var(--bd);
+      margin: 2px 0;
+      opacity: 0.9;
+    }
+
+    .sys-subrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sys-select {
+      background: var(--bg);
+      border: 1px solid var(--bd);
+      color: var(--t1);
+      border-radius: var(--radius);
+      font-size: 12.5px;
+      padding: 7px 10px;
+      min-width: 180px;
+      font-family: var(--font);
+      outline: none;
+    }
+
+    .sys-select:focus {
+      border-color: var(--bd2);
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.12);
+    }
+
+    .sys-hint {
+      font-size: 11px;
+      color: var(--t3);
+    }
+
+    .sys-btn {
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      font-family: var(--font);
+    }
+
+    .sys-btn.primary {
+      background: rgba(66, 133, 244, 0.15);
+      color: #4285f4;
+    }
+
+    .sys-btn.primary:hover {
+      background: rgba(66, 133, 244, 0.25);
+    }
+
+    .sys-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--bd);
+      color: var(--t2);
+    }
+
+    .sys-btn.secondary:hover {
+      background: var(--bgh);
+      color: var(--t1);
+    }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           CHAT AREA
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #chat {
+        flex: 1;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           WELCOME SCREEN ÔÇö Gemini style
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #welcome {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px 20px;
+        gap: 0;
+        animation: welcomeFade 0.55s ease;
+      }
+      @keyframes welcomeFade {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Gemini-style animated logo mark */
+      .wl-wrap {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 18px;
+        position: relative;
+      }
+      .wl-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        background:
+          linear-gradient(var(--bg), var(--bg)) padding-box,
+          linear-gradient(135deg, var(--grad1), var(--grad2), var(--grad3))
+            border-box;
+        animation: ringPulse 3s ease-in-out infinite;
+      }
+      .wl-inner {
+        position: absolute;
+        inset: 8px;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          var(--grad1),
+          var(--grad2),
+          var(--grad3)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: innerPulse 3s ease-in-out infinite;
+      }
+      .wl-inner svg {
+        width: 20px;
+        height: 20px;
+      }
+      @keyframes ringPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
+        50% {
+          transform: scale(1.12);
+          opacity: 1;
+        }
+      }
+      @keyframes innerPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      /* Gradient "Hello" title */
+      .wt {
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -1px;
+        margin-bottom: 8px;
+        background: linear-gradient(
+          90deg,
+          var(--grad1) 0%,
+          var(--grad2) 40%,
+          var(--grad3) 70%,
+          var(--t1) 90%
+        );
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shimmer 5s ease-in-out infinite;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 100% 0;
+        }
+        100% {
+          background-position: -100% 0;
+        }
+      }
+      .ws {
+        font-size: 16px;
+        color: var(--t2);
+        margin-bottom: 36px;
+        font-weight: 400;
+      }
+
+      /* Suggestion chips ÔÇö Gemini style */
+      .sg {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        max-width: 600px;
+        width: 100%;
+      }
+      .sc {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--bd);
+        background: var(--bg2);
+        cursor: pointer;
+        transition:
+          background 0.17s,
+          border-color 0.17s,
+          transform 0.12s,
+          box-shadow 0.17s;
+      }
+      .sc:hover {
+        background: var(--bgh);
+        border-color: var(--bd2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px var(--shd);
+      }
+      .sc .si {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .sc .st {
+        font-size: 13px;
+        color: var(--t2);
+        line-height: 1.45;
+      }
+      .ib {
+        background: rgba(66, 133, 244, 0.12);
+        color: #4285f4;
+      }
+      .ip {
+        background: rgba(155, 114, 203, 0.12);
+        color: #9b72cb;
+      }
+      .it {
+        background: rgba(52, 168, 124, 0.12);
+        color: #34a87c;
+      }
+      .io {
+        background: rgba(234, 134, 59, 0.12);
+        color: #ea863b;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           MESSAGES
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #msgs {
+        max-width: 780px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 24px 24px 16px;
+        display: none;
+        flex-direction: column;
+      }
+      #msgs.on {
+        display: flex;
+      }
+
+      /* Message row */
+      .mr {
+        display: flex;
+        gap: 14px;
+        padding: 16px 0 6px;
+        animation: msgIn 0.25s ease;
+      }
+      @keyframes msgIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .mr.usr {
+        justify-content: flex-end;
+      }
+
+      /* Avatar */
+      .ma {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2px;
+      }
+      .ma.ai {
+        background: linear-gradient(
+          135deg,
+          var(--grad1),
+          var(--grad2),
+          var(--grad3)
+        );
+      }
+      .ma.ai svg {
+        width: 16px;
+        height: 16px;
+      }
+      .ma.u {
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--t2);
+      }
+
+      .mc {
+        flex: 1;
+        min-width: 0;
+        max-width: 700px;
+      }
+      .usr .mc {
+        display: flex;
+        flex-direction: column;
+        align-items: end;
+        max-width: 82%;
+      }
+
+      /* User bubble ÔÇö ChatGPT style */
+      .ub {
+        background: var(--bg-u);
+        border-radius: 22px;
+        border-top-right-radius: 5px;
+        padding: 12px 18px;
+        border: 1px solid var(--bd);
+        display: inline-block;
+      }
+
+      /* Text content */
+      .mt {
+        font-size: 15px;
+        line-height: 1.72;
+        word-wrap: break-word;
+        color: var(--t1);
+      }
+
+      .mc > .mt {
+        padding-top: 0.3rem;
+      }
+
+      /* Markdown styles */
+      .mt p {
+        margin-bottom: 12px;
+      }
+      .mt p:last-child {
+        margin-bottom: 0;
+      }
+      .mt h1,
+      .mt h2,
+      .mt h3 {
+        font-weight: 600;
+        margin: 20px 0 10px;
+        color: var(--t1);
+      }
+      .mt h1 {
+        font-size: 1.35em;
+      }
+      .mt h2 {
+        font-size: 1.18em;
+      }
+      .mt h3 {
+        font-size: 1.06em;
+      }
+      .mt strong {
+        font-weight: 600;
+      }
+      .mt a {
+        color: var(--grad1);
+        text-decoration: none;
+      }
+      .mt a:hover {
+        text-decoration: underline;
+      }
+      .mt ul,
+      .mt ol {
+        margin: 12px 0;
+        padding-left: 24px;
+      }
+      .mt li {
+        margin-bottom: 5px;
+      }
+      .mt hr {
+        border: none;
+        border-top: 1px solid var(--bd);
+        margin: 20px 0;
+      }
+      .mt table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 14px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+      }
+      .mt th,
+      .mt td {
+        padding: 8px 14px;
+        border: 1px solid var(--bd);
+        text-align: left;
+      }
+      .mt th {
+        background: var(--bg2);
+        font-weight: 600;
+      }
+
+      /* Inline code */
+      .mt code:not(.hljs) {
+        background: var(--bg3);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', 'SF Mono', monospace;
+        font-size: 0.88em;
+        border: 1px solid var(--bd);
+      }
+
+      /* Code blocks */
+      .cblk {
+        margin: 16px 0;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+        background: var(--code);
+      }
+      .cbh {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 14px;
+        background: var(--bg2);
+        border-bottom: 1px solid var(--bd);
+        font-size: 12px;
+        color: var(--t3);
+      }
+      .cbc-btn {
+        background: none;
+        border: none;
+        color: var(--t3);
+        cursor: pointer;
+        font-size: 12px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font);
+      }
+      .cbc-btn:hover {
+        background: var(--bgh);
+        color: var(--t1);
+      }
+      .cblk pre {
+        padding: 16px;
+        overflow-x: auto;
+        margin: 0;
+        background: transparent !important;
+      }
+      .cblk pre code {
+        font-family: 'JetBrains Mono', 'SF Mono', monospace;
+        font-size: 13px;
+        line-height: 1.65;
+        background: transparent !important;
+        padding: 0;
+      }
+
+      /* Attachment previews in messages */
+      .msg-img {
+        max-width: 280px;
+        border-radius: 12px;
+        display: block;
+        border: 1px solid var(--bd);
+      }
+      .msg-pdf-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg3);
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        color: var(--t2);
+        border: 1px solid var(--bd);
+      }
+      .usr-attach {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      /* Message actions (copy/like/dislike) */
+      .mact {
+        display: flex;
+        gap: 1px;
+        margin-top: 8px;
+        opacity: 0;
+        transition: opacity 0.18s;
+      }
+      .mr:hover .mact {
+        opacity: 1;
+      }
+      .mab {
+        background: none;
+        border: none;
+        color: var(--t3);
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-size: 13px;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .mab:hover {
+        background: var(--bgh);
+        color: var(--t1);
+      }
+      .mab.lk {
+        color: var(--grad1);
+      }
+      .mab.dlk {
+        color: var(--red);
+      }
+
+      /* Typing dots */
+      .typ {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 0 8px;
+      }
+      .typ span {
+        width: 7px;
+        height: 7px;
+        background: var(--t3);
+        border-radius: 50%;
+        animation: typBounce 1.4s infinite ease-in-out;
+      }
+      .typ span:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+      .typ span:nth-child(3) {
+        animation-delay: 0.32s;
+      }
+      @keyframes typBounce {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.4;
+        }
+        30% {
+          transform: translateY(-6px);
+          opacity: 1;
+        }
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           INPUT AREA ÔÇö Gemini/ChatGPT style
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #inp-area {
+        padding: 8px 20px 18px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Vision warning */
+      #vision-warn {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        max-width: 740px;
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 10px 16px;
+        background: rgba(253, 176, 57, 0.08);
+        border-radius: 10px;
+        font-size: 13px;
+        color: var(--orange);
+        border: 1px solid rgba(253, 176, 57, 0.2);
+      }
+      #vision-warn.on {
+        display: flex;
+      }
+
+      /* File/image preview bar */
+      .fbar {
+        max-width: 740px;
+        width: 100%;
+        display: none;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .fbar.on {
+        display: flex;
+        padding: 10px 14px 4px;
+      }
+      .fbar .img-preview {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+      }
+      .fbar .img-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .pdf-preview {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        background: var(--bg3);
+        border-radius: 12px;
+        border: 1px solid var(--bd);
+      }
+      .pdf-preview .p-info {
+        display: flex;
+        flex-direction: column;
+        max-width: 130px;
+      }
+      .pdf-preview strong {
+        font-size: 12px;
+        color: var(--t1);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pdf-preview span {
+        font-size: 10px;
+        color: var(--t3);
+      }
+      .f-rm {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pdf-preview .f-rm {
+        position: relative;
+        top: 0;
+        right: 0;
+        background: transparent;
+        color: var(--t3);
+      }
+      .pdf-preview .f-rm:hover {
+        color: var(--red);
+      }
+
+      /* The main input wrapper ÔÇö pill/rounded-rectangle */
+      .iw {
+        max-width: 740px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-inp);
+        border: 1px solid var(--bd);
+        border-radius: 22px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        overflow: visible;
+        position: relative;
+      }
+      .iw:focus-within,
+      .iw.ht {
+        border-color: var(--bd2);
+        box-shadow: 0 2px 20px var(--shd);
+      }
+
+      /* ÔöÇÔöÇ Model Selector Row (INSIDE input, at top) ÔöÇÔöÇ */
+      .model-row {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px 0;
+        gap: 6px;
+      }
+
+      .model-dd {
+        position: relative;
+      }
+
+      .model-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 11px 5px 8px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--bd);
+        background: var(--bg3);
+        color: var(--t2);
+        font-family: var(--font);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          color 0.15s;
+      }
+      .model-btn:hover {
+        background: var(--bgh);
+        border-color: var(--bd2);
+        color: var(--t1);
+      }
+      .model-btn svg {
+        width: 13px;
+        height: 13px;
+        flex-shrink: 0;
+      }
+      .model-btn .chev {
+        font-size: 9px;
+        color: var(--t3);
+        margin-left: 2px;
+        transition: transform 0.2s;
+      }
+      .model-btn.open .chev {
+        transform: rotate(180deg);
+      }
+
+      /* Model dropdown menu */
+      .model-menu {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 0;
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        padding: 6px;
+        min-width: 250px;
+        max-height: 320px;
+        overflow-y: auto;
+        z-index: 200;
+        box-shadow: 0 12px 36px var(--shd);
+        display: none;
+        animation: menuPop 0.15s ease;
+      }
+      .model-menu.on {
+        display: block;
+      }
+      @keyframes menuPop {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .mm-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.13s;
+      }
+      .mm-opt:hover {
+        background: var(--bgh);
+      }
+      .mm-opt.sel {
+        background: var(--bga);
+      }
+      .mmo-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+        background: linear-gradient(
+          135deg,
+          var(--grad1),
+          var(--grad2),
+          var(--grad3)
+        );
+        color: #fff;
+      }
+      .mmo-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .mmo-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--t1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mmo-desc {
+        font-size: 11px;
+        color: var(--t3);
+        margin-top: 1px;
+      }
+      .mmo-chk {
+        color: var(--grad1);
+        font-size: 12px;
+        opacity: 0;
+      }
+      .mm-opt.sel .mmo-chk {
+        opacity: 1;
+      }
+
+      /* Temperature control */
+      .temp-ctrl {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .temp-lbl {
+        font-size: 11px;
+        color: var(--t3);
+        font-weight: 500;
+      }
+      #temp-input {
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        color: var(--t1);
+        font-size: 12px;
+        padding: 3px 6px;
+        border-radius: 6px;
+        width: 54px;
+        text-align: center;
+        font-family: var(--font);
+      }
+      #temp-input:focus {
+        outline: none;
+        border-color: var(--bd2);
+      }
+
+      /* ÔöÇÔöÇ Text row (textarea + action buttons) ÔöÇÔöÇ */
+      .text-row {
+        display: flex;
+        align-items: flex-end;
+        padding: 6px 8px 8px 16px;
+      }
+      #msg-inp {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-family: var(--font);
+        font-size: 15px;
+        color: var(--t1);
+        resize: none;
+        max-height: 200px;
+        line-height: 1.55;
+        padding: 6px 4px;
+      }
+      #msg-inp::placeholder {
+        color: var(--t3);
+      }
+
+      /* Action buttons row */
+      .ia {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+
+      /* Icon button base */
+      .ib2 {
+        background: none;
+        border: none;
+        color: var(--t3);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        font-size: 15px;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ib2:hover {
+        background: var(--bgh);
+        color: var(--t1);
+      }
+
+      /* Send button */
+      .sbtn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--bd);
+        color: var(--bg);
+        transition:
+          background 0.2s,
+          transform 0.12s;
+        font-size: 14px;
+      }
+      .sbtn.on {
+        background: var(--t1);
+        cursor: pointer;
+      }
+      .sbtn.on:hover {
+        transform: scale(1.06);
+      }
+      .sbtn.on:active {
+        transform: scale(0.94);
+      }
+
+      /* Stop streaming button */
+      .stbtn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--t1);
+        color: var(--bg);
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+        border: none;
+      }
+      .stbtn:hover {
+        opacity: 0.85;
+      }
+
+      /* Disclaimer */
+      .disc {
+        font-size: 11.5px;
+        color: var(--t3);
+        text-align: center;
+        margin-top: 8px;
+        max-width: 740px;
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           TOASTS
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      #toasts {
+        position: fixed;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 300;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        pointer-events: none;
+      }
+      .toast {
+        background: var(--tst);
+        color: var(--t1);
+        padding: 9px 20px;
+        border-radius: 10px;
+        font-size: 13px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+        animation:
+          toastIn 0.22s ease,
+          toastOut 0.22s ease 2.2s forwards;
+        white-space: nowrap;
+        border: 1px solid var(--bd);
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes toastOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+      }
+
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+           RESPONSIVE
+        ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+      @media (max-width: 768px) {
+        #sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100%;
+        }
+        #sidebar.off {
+          transform: translateX(-100%);
+        }
+        .sg {
+          grid-template-columns: 1fr;
+        }
+        .usr .mc {
+          max-width: 88%;
+        }
+        .wt {
+          font-size: 30px;
+        }
+        #inp-area {
+          padding: 6px 12px 14px;
+        }
+        #msgs {
+          padding: 16px 16px 12px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Drag-and-drop overlay */
+      #main.drag-over::after {
+        content: 'Drop image, PDF or text file';
+        position: absolute;
+        inset: 0;
+        background: rgba(66, 133, 244, 0.1);
+        border: 2px dashed var(--grad1);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: var(--grad1);
+        font-weight: 500;
+        pointer-events: none;
+        z-index: 20;
+      }
+      #main {
+        position: relative;
+      }
+
+      /* ════════════════════════════════════════════════════════════
+         IMAGE GENERATION PANEL
+        ════════════════════════════════════════════════════════════ */
+      #img-panel {
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 16px;
+      }
+      #img-panel.on {
+        display: flex;
+      }
+      .img-wrap {
+        max-width: 720px;
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .img-warn {
+        background: rgba(253, 176, 57, 0.12);
+        border: 1px solid rgba(253, 176, 57, 0.35);
+        color: var(--orange);
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+
+      /* ════════════════════════════════════════════════════════════
+        TEXT TO SPEECH PANEL
+       ════════════════════════════════════════════════════════════ */
+      #tts-panel {
+       display: none;
+       flex-direction: column;
+       flex: 1;
+       overflow-y: auto;
+       padding: 20px 16px;
+      }
+      .tts-wrap {
+       max-width: 720px;
+       width: 100%;
+       margin: 0 auto;
+       display: flex;
+       flex-direction: column;
+       gap: 16px;
+      }
+      .tts-audio-card {
+       background: var(--bg2);
+       border: 1px solid var(--bd);
+       border-radius: var(--radius);
+       padding: 20px;
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       gap: 16px;
+       width: 100%;
+      }
+      .tts-player {
+       width: 100%;
+       height: 40px;
+      }
+
+      .img-warn strong {
+        font-weight: 600;
+      }
+      .img-engine-card {
+        background: var(--bg2);
+        border: 1px solid var(--bd);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        width: 100%;
+        max-width: 560px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .img-engine-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--t3);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+      }
+      .img-engine-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--bd);
+      }
+      .img-engine-row:last-child {
+        border-bottom: none;
+      }
+      .img-engine-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+      .img-engine-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .img-engine-dot.on {
+        background: var(--green);
+        box-shadow: 0 0 0 3px rgba(109, 213, 140, 0.25);
+      }
+      .img-engine-dot.off {
+        background: var(--red);
+        box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.25);
+      }
+      .img-engine-dot.warn {
+        background: var(--orange);
+        box-shadow: 0 0 0 3px rgba(253, 176, 57, 0.25);
+      }
+      .img-engine-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--t1);
+        white-space: nowrap;
+      }
+      .img-engine-status {
+        font-size: 12px;
+        color: var(--t3);
+        margin-left: auto;
+        white-space: nowrap;
+      }
+      .img-engine-btn {
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        color: var(--t2);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: var(--radius-pill);
+        cursor: pointer;
+        font-family: var(--font);
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .img-engine-btn:hover {
+        background: var(--bg1);
+        color: var(--t1);
+        border-color: var(--bd2);
+      }
+      .img-engine-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .img-engine-btn.primary {
+        background: linear-gradient(135deg, var(--grad1), var(--grad2));
+        border: none;
+        color: #fff;
+      }
+      .img-engine-btn.primary:hover {
+        opacity: 0.92;
+      }
+      .img-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .img-row label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--t2);
+      }
+      .img-row textarea {
+        background: var(--bg2);
+        border: 1px solid var(--bd);
+        color: var(--t1);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        font-size: 14px;
+        font-family: var(--font);
+        resize: vertical;
+        min-height: 64px;
+        outline: none;
+      }
+      .img-row textarea:focus {
+        border-color: var(--bd2);
+        box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.12);
+      }
+      .img-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .img-grid .img-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+      }
+      .img-grid .img-row label {
+        min-width: 60px;
+      }
+      .img-grid .img-row input,
+      .img-grid .img-row select {
+        flex: 1;
+        background: var(--bg2);
+        border: 1px solid var(--bd);
+        color: var(--t1);
+        border-radius: var(--radius);
+        padding: 7px 10px;
+        font-size: 13px;
+        font-family: var(--font);
+        outline: none;
+      }
+      .img-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .img-btn {
+        padding: 10px 20px;
+        border-radius: var(--radius-pill);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        font-family: var(--font);
+        transition: background 0.15s, transform 0.1s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .img-btn:hover {
+        transform: translateY(-1px);
+      }
+      .img-btn.primary {
+        background: linear-gradient(135deg, var(--grad1), var(--grad2));
+        color: #fff;
+      }
+      .img-btn.primary:hover {
+        opacity: 0.92;
+      }
+      .img-btn.secondary {
+        background: transparent;
+        border: 1px solid var(--bd);
+        color: var(--t2);
+      }
+      .img-btn.secondary:hover {
+        background: var(--bgh);
+        color: var(--t1);
+      }
+      .img-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .img-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        margin-top: 8px;
+        width: 100%;
+      }
+      .img-preview img {
+        max-width: 100%;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--bd);
+        box-shadow: 0 8px 32px var(--shd);
+      }
+      .img-meta {
+        font-size: 11px;
+        color: var(--t3);
+      }
+      .img-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--bd);
+        border-top-color: var(--grad1);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .img-status {
+        font-size: 13px;
+        color: var(--t2);
+        text-align: center;
+      }
+      .img-progress-wrap {
+        width: 100%;
+        max-width: 560px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .img-progress-bar-track {
+        width: 100%;
+        height: 14px;
+        background: var(--bg2);
+        border-radius: 7px;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+      }
+      .img-progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--grad1), var(--grad2));
+        border-radius: 7px;
+        width: 0%;
+        transition: width 0.4s ease;
+      }
+      .img-progress-info {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 4px;
+        font-size: 14px;
+        color: var(--t2);
+        font-weight: 500;
+      }
+      .img-progress-eta {
+        font-size: 13px;
+        color: var(--grad1);
+        font-weight: 600;
+        text-align: center;
+        margin-top: 2px;
+      }
+      .img-params-card {
+        background: var(--bg2);
+        border: 1px solid var(--bd);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        width: 100%;
+        max-width: 560px;
+      }
+      .img-params-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--t3);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+      }
+      .img-params-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 16px;
+      }
+      .img-param {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+      .img-param-key {
+        color: var(--t3);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .img-param-val {
+        color: var(--t1);
+        font-weight: 500;
+        font-family: 'JetBrains Mono', monospace;
+        overflow-wrap: anywhere;
+        text-align: right;
+        min-width: 0;
+      }
+      .mode-tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--bg2);
+        padding: 4px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--bd);
+      }
+      .mode-tab {
+        background: none;
+        border: none;
+        color: var(--t2);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: var(--radius-pill);
+        cursor: pointer;
+        font-family: var(--font);
+        transition: background 0.15s, color 0.15s;
+      }
+      .mode-tab:hover {
+        color: var(--t1);
+      }
+      .mode-tab.act {
+        background: var(--bg3);
+        color: var(--t1);
+        box-shadow: 0 1px 4px var(--shd);
+      }
+
+      /* Image Lightbox Modal */
+      #img-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+      }
+      #img-modal.on {
+        display: flex;
+      }
+      #img-modal img {
+        max-width: 95vw;
+        max-height: 85vh;
+        border-radius: 8px;
+        box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+        cursor: zoom-out;
+      }
+      .img-modal-actions {
+        display: flex;
+        gap: 12px;
+      }
+      .img-modal-btn {
+        background: var(--bg2);
+        border: 1px solid var(--bd);
+        color: var(--t1);
+        padding: 10px 20px;
+        border-radius: var(--radius-pill);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--font);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.15s;
+      }
+      .img-modal-btn:hover {
+        background: var(--bgh);
+      }
+      .img-modal-close {
+        position: absolute;
+        top: 16px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: var(--t1);
+        font-size: 28px;
+        cursor: pointer;
+        padding: 8px;
+        line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ SIDEBAR ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+      <aside id="sidebar" role="navigation" aria-label="Chat history">
+        <div class="sb-hd">
+          <div class="sb-brand">
+            <div class="sb-brand-icon">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z"
+                  fill="white"
+                />
+              </svg>
+            </div>
+            <span class="sb-brand-name">Portable AI</span>
+          </div>
+          <button class="nc-btn" id="nc-btn" aria-label="New chat">
+            <i class="fa-solid fa-plus"></i>
+            <span>New chat</span>
+          </button>
+        </div>
+
+        <div class="sb-list" id="cv-list"></div>
+
+        <div class="sb-ft">
+          <button
+            class="sf-btn"
+            id="th-sb"
+            aria-label="Toggle theme"
+            title="Toggle theme"
+          >
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <div class="sf-sp"></div>
+          <button
+            class="sf-btn"
+            id="ca-btn"
+            aria-label="Clear all chats"
+            title="Clear all chats"
+          >
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </aside>
+
+      <div id="overlay"></div>
+
+      <!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ MAIN ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+      <main id="main">
+        <!-- Top Bar -->
+        <header id="topbar">
+          <button class="tb-btn" id="sb-tog" aria-label="Toggle sidebar">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+
+          <div class="tb-title" id="tb-title"></div>
+          <div class="tb-sp"></div>
+
+          <!-- Mode Switcher -->
+          <div class="mode-tabs" id="mode-tabs">
+            <button class="mode-tab act" data-mode="chat" id="tab-chat">Chat</button>
+            <button class="mode-tab" data-mode="image" id="tab-image">Image</button>
+            <button class="mode-tab" data-mode="tts" id="tab-tts">TTS</button>
+          </div>
+
+          <button id="sys-prompt-btn" title="System Instructions">
+            <i class="fa-solid fa-sliders"></i>
+            <span class="hidden sm:inline">Instructions</span>
+          </button>
+
+          <!-- HW Stats ÔÇö hidden on mobile -->
+          <div class="hw-bar hidden md:flex" id="hw-bar">
+            <div class="hw-stat">
+              <span style="color: var(--t3); font-size: 10px">CPU</span>
+              <div class="hw-mini-track">
+                <div class="hw-mini-bar cpu" id="cpu-bar"></div>
+              </div>
+              <span class="hw-pct" id="cpu-pct">--%</span>
+            </div>
+            <div class="hw-stat">
+              <span style="color: var(--t3); font-size: 10px">RAM</span>
+              <div class="hw-mini-track">
+                <div class="hw-mini-bar ram" id="ram-bar"></div>
+              </div>
+              <span class="hw-pct" id="ram-pct">--%</span>
+            </div>
+          </div>
+
+          <button
+            class="tb-btn md:hidden"
+            id="th-top"
+            aria-label="Toggle theme"
+          >
+            <i class="fa-solid fa-moon"></i>
+          </button>
+        </header>
+
+      <!-- System Prompt Panel (slides down from topbar) -->
+      <div id="sys-panel">
+        <div class="sys-row">
+          <label>System Instructions</label>
+          <textarea id="sys-ta" placeholder="Add context or instructions for this conversation..."></textarea>
+        </div>
+        <div class="sys-actions">
+          <button class="sys-btn primary" id="set-global-btn">
+            Set as Default
+          </button>
+          <button class="sys-btn secondary" id="clear-global-btn">
+            Clear
+          </button>
+        </div>
+        <hr class="sys-divider" />
+        <div class="sys-row">
+          <label>Network Access</label>
+          <div class="sys-subrow" style="background: var(--bg); padding: 10px; border-radius: 6px; border: 1px solid var(--bd); margin-top: 5px;">
+            <code id="net-url" style="font-size: 13px; color: var(--green); word-break: break-all;">Fetching...</code>
+            <button class="tb-btn" id="copy-net-btn" title="Copy URL" style="margin-left: auto;">
+              <i class="fa-solid fa-copy"></i>
+            </button>
+          </div>
+          <p style="font-size: 11px; color: var(--t3); margin-top: 8px;">
+            Open this URL on your phone or another PC on the same Wi-Fi to use the AI remotely.
+          </p>
+        </div>
+        <hr class="sys-divider" />
+        <div class="sys-row">
+          <label for="log-mode-select">Logging</label>
+          <div class="sys-subrow">
+            <select id="log-mode-select" class="sys-select">
+              <option value="errors_only">Errors only (Recommended)</option>
+              <option value="all">Everything (Verbose)</option>
+            </select>
+            <span class="sys-hint">Saved per device. Reduce disk writes by using errors only.</span>
+          </div>
+        </div>
+      </div>
+
+        <!-- Chat / Messages -->
+        <div id="chat">
+          <!-- Welcome screen -->
+          <div id="welcome">
+            <div class="wl-wrap">
+              <div class="wl-ring"></div>
+              <div class="wl-inner">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z"
+                    fill="white"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="wt">Hello</div>
+            <div class="ws">What can I help you with today?</div>
+
+            <div class="sg">
+              <div
+                class="sc"
+                data-prompt="Help me write a professional email to reschedule a meeting"
+              >
+                <div class="si ib"><i class="fa-solid fa-pen-fancy"></i></div>
+                <div class="st">
+                  Help me write a professional email to reschedule a meeting
+                </div>
+              </div>
+              <div
+                class="sc"
+                data-prompt="Explain quantum computing in simple terms"
+              >
+                <div class="si ip"><i class="fa-solid fa-lightbulb"></i></div>
+                <div class="st">Explain quantum computing in simple terms</div>
+              </div>
+              <div
+                class="sc"
+                data-prompt="Write a Python function to find prime numbers"
+              >
+                <div class="si it"><i class="fa-solid fa-code"></i></div>
+                <div class="st">
+                  Write a Python function to find prime numbers
+                </div>
+              </div>
+              <div class="sc" data-prompt="Plan a 7-day trip to Tokyo, Japan">
+                <div class="si io"><i class="fa-solid fa-plane"></i></div>
+                <div class="st">Plan a 7-day trip to Tokyo, Japan</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="msgs"></div>
+        </div>
+
+        <!-- Input Area -->
+        <div id="inp-area">
+          <!-- Vision warning -->
+          <div id="vision-warn">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span
+              ><strong id="warn-model"></strong> is text-only. It cannot process
+              images. Try a vision model like <code>llava</code>.</span
+            >
+          </div>
+
+          <!-- Main input wrapper -->
+          <div class="iw" id="iw">
+            <!-- File/image preview bar (inside the box) -->
+            <div class="fbar" id="fbar"></div>
+
+            <!-- Model selector row ÔÇö INSIDE the input box at top -->
+            <div class="model-row">
+              <div class="model-dd" id="model-dd">
+                <button
+                  class="model-btn"
+                  id="model-btn"
+                  aria-label="Select model"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <defs>
+                      <linearGradient
+                        id="mvg"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="100%"
+                      >
+                        <stop offset="0%" stop-color="var(--grad1)" />
+                        <stop offset="50%" stop-color="var(--grad2)" />
+                        <stop offset="100%" stop-color="var(--grad3)" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z"
+                      fill="url(#mvg)"
+                    />
+                  </svg>
+                  <span id="model-name">Loading...</span>
+                  <i class="fa-solid fa-chevron-down chev"></i>
+                </button>
+
+                <!-- Model dropdown (opens upward) -->
+                <div class="model-menu" id="model-menu">
+                  <div
+                    style="
+                      padding: 16px;
+                      font-size: 12px;
+                      color: var(--t3);
+                      text-align: center;
+                    "
+                  >
+                    Connecting to Engine...
+                  </div>
+                </div>
+              </div>
+              <div class="temp-ctrl">
+                <label class="temp-lbl">Temp</label>
+                <input
+                  type="number"
+                  id="temp-input"
+                  value="0.7"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                />
+              </div>
+            </div>
+
+            <!-- Textarea + send row -->
+            <div class="text-row">
+              <textarea
+                id="msg-inp"
+                placeholder="Ask anything..."
+                rows="1"
+                aria-label="Message input"
+              ></textarea>
+              <div class="ia">
+                <button
+                  class="ib2"
+                  id="att-btn"
+                  aria-label="Attach file"
+                  title="Upload image or PDF"
+                >
+                  <i class="fa-solid fa-paperclip"></i>
+                </button>
+                <input
+                  type="file"
+                  id="f-inp"
+                  hidden
+                  multiple
+                  accept="image/*,.pdf,application/pdf,.txt,.md"
+                />
+                <button
+                  class="ib2 sbtn"
+                  id="send-btn"
+                  aria-label="Send message"
+                  disabled
+                >
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="disc">
+            Responses are generated locally. May contain inaccuracies.
+          </p>
+        </div>
+
+        <!-- Image Generation Panel -->
+        <div id="img-panel">
+          <div class="img-wrap">
+            <div class="img-engine-card" id="img-engine-card">
+              <div class="img-engine-title">Engine Control</div>
+              <div class="img-engine-row">
+                <div class="img-engine-info">
+                  <span class="img-engine-dot" id="chat-engine-dot"></span>
+                  <span class="img-engine-name">Chat Engine</span>
+                  <span class="img-engine-status" id="chat-engine-status">Checking...</span>
+                </div>
+                <button class="img-engine-btn" id="img-stop-ollama">Unload</button>
+                <button class="img-engine-btn primary" id="img-start-ollama">Load</button>
+              </div>
+              <div class="img-engine-row">
+                <div class="img-engine-info">
+                  <span class="img-engine-dot on" id="img-engine-dot"></span>
+                  <span class="img-engine-name">Image Engine</span>
+                  <span class="img-engine-status" id="img-engine-status">Checking...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="img-warn" id="img-warn" style="display:none;"></div>
+
+            <div class="img-row">
+              <label>Prompt</label>
+              <textarea id="img-prompt" placeholder="Describe the image you want to generate..."></textarea>
+            </div>
+
+            <div class="img-row">
+              <label>Negative Prompt</label>
+              <textarea id="img-neg" placeholder="Things to avoid (optional)..." style="min-height:40px"></textarea>
+            </div>
+
+            <div class="img-grid">
+              <div class="img-row">
+                <label>Steps</label>
+                <input type="number" id="img-steps" value="20" min="1" max="50" />
+              </div>
+              <div class="img-row">
+                <label>CFG</label>
+                <input type="number" id="img-cfg" value="7.0" min="1" max="15" step="0.5" />
+              </div>
+              <div class="img-row">
+                <label>Width</label>
+                <select id="img-width">
+                  <option value="256">256</option>
+                  <option value="320">320</option>
+                  <option value="384">384</option>
+                  <option value="448">448</option>
+                  <option value="512" selected>512</option>
+                  <option value="576">576</option>
+                  <option value="640">640</option>
+                  <option value="768">768</option>
+                </select>
+              </div>
+              <div class="img-row">
+                <label>Height</label>
+                <select id="img-height">
+                  <option value="256">256</option>
+                  <option value="320">320</option>
+                  <option value="384">384</option>
+                  <option value="448">448</option>
+                  <option value="512" selected>512</option>
+                  <option value="576">576</option>
+                  <option value="640">640</option>
+                  <option value="768">768</option>
+                </select>
+              </div>
+              <div class="img-row">
+                <label>Seed</label>
+                <input type="number" id="img-seed" value="-1" min="-1" />
+              </div>
+              <div class="img-row">
+                <label>Sampler</label>
+                <select id="img-sampler">
+                  <option value="euler_a" selected>Euler a</option>
+                  <option value="euler">Euler</option>
+                  <option value="heun">Heun</option>
+                  <option value="dpm++2m">DPM++ 2M</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="img-actions">
+              <button class="img-btn primary" id="img-gen-btn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate
+              </button>
+            </div>
+
+            <div class="img-preview" id="img-preview">
+              <div id="img-progress" style="display:none; width:100%; align-items:center; flex-direction:column; gap:10px;">
+                <div class="img-progress-wrap">
+                  <div class="img-progress-bar-track">
+                    <div class="img-progress-bar-fill" id="img-bar-fill" style="width:0%"></div>
+                  </div>
+                  <div class="img-progress-info">
+                    <span id="img-step-text">Starting...</span>
+                    <span id="img-time-text">0s</span>
+                  </div>
+                  <div class="img-progress-eta" id="img-eta-text"></div>
+                </div>
+              </div>
+              <div id="img-result" style="display:none; flex-direction:column; align-items:center; gap:12px; width:100%;">
+                <img id="img-result-img" src="" alt="Generated" style="max-width:560px; width:100%; border-radius:var(--radius-lg); border:1px solid var(--bd); box-shadow:0 8px 32px var(--shd);" />
+                <div class="img-params-card" id="img-params-card">
+                  <div class="img-params-title">Generation Parameters</div>
+                  <div class="img-params-grid" id="img-params-grid"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text to Speech Panel -->
+        <div id="tts-panel">
+          <div class="tts-wrap">
+            <div class="img-engine-card">
+              <div class="img-engine-title">TTS Engine</div>
+              <div class="img-engine-row">
+                <div class="img-engine-info">
+                  <span class="img-engine-dot" id="tts-engine-dot"></span>
+                  <span class="img-engine-name">Piper TTS</span>
+                  <span class="img-engine-status" id="tts-engine-status">Checking...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="img-row">
+              <label>Text to Speak</label>
+              <textarea id="tts-text" placeholder="Enter text to convert to speech..." style="min-height:120px"></textarea>
+            </div>
+
+            <div class="img-row">
+              <label>Voice</label>
+              <select id="tts-voice" class="sys-select" style="width:100%; height:40px; padding:0 12px;">
+                <option value="">Loading voices...</option>
+              </select>
+            </div>
+
+            <div class="img-actions">
+              <button class="img-btn primary" id="tts-gen-btn">
+                <i class="fa-solid fa-play"></i> Generate & Play
+              </button>
+            </div>
+
+            <div class="tts-audio-card" id="tts-result" style="display:none;">
+              <audio id="tts-audio-player" class="tts-player" controls></audio>
+              <div class="img-actions" style="width:100%; margin-top:8px;">
+                <a id="tts-download-link" class="img-btn" style="text-decoration:none; flex:1; display:flex; align-items:center; justify-content:center; gap:8px;">
+                  <i class="fa-solid fa-download"></i> Download WAV
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div id="img-modal">
+      <button class="img-modal-close" id="img-modal-close" aria-label="Close">&times;</button>
+      <img id="img-modal-img" src="" alt="Enlarged generated image" />
+      <div class="img-modal-actions">
+        <button class="img-modal-btn" id="img-modal-download">
+          <i class="fa-solid fa-download"></i> Download PNG
+        </button>
+      </div>
+    </div>
+
+    <div id="toasts"></div>
+
+    <script>
+      /* ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+   Portable AI ÔÇö Fast Chat ┬À Core Logic (unchanged)
+   ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ */
+
+      // ÔöÇÔöÇ Config ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      const IS_SERVED =
+        location.protocol === 'http:' || location.protocol === 'https:';
+      const OLLAMA = IS_SERVED ? '/ollama' : 'http://127.0.0.1:11435';
+      const VISION_MODELS = [
+        'llava',
+        'moondream',
+        'bakllava',
+        'vision',
+        'minicpm-v',
+        'cogvlm',
+        'qwen-vl',
+        'phi-3-vision',
+      ];
+
+    const S = {
+      convs: [],
+      curId: null,
+      theme: localStorage.getItem('g-theme') || 'dark',
+      sbOpen: window.innerWidth > 768,
+      streaming: false,
+      abort: null,
+      models: [],
+      model: localStorage.getItem('g-model') || '',
+      globalSys: '',
+      logMode: localStorage.getItem('logMode') || 'errors_only',
+      mode: 'chat', // 'chat' or 'image'
+
+        // Attachments (multi-file)
+        attachments: [],
+      };
+
+      // ÔöÇÔöÇ DOM ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => document.querySelectorAll(s);
+
+      const D = {
+        sb: document.getElementById('sidebar'),
+        ov: document.getElementById('overlay'),
+        cvList: document.getElementById('cv-list'),
+        welcome: document.getElementById('welcome'),
+        msgs: document.getElementById('msgs'),
+        chat: document.getElementById('chat'),
+        inp: document.getElementById('msg-inp'),
+        iw: document.getElementById('iw'),
+        send: document.getElementById('send-btn'),
+        att: document.getElementById('att-btn'),
+        fInp: document.getElementById('f-inp'),
+        fBar: document.getElementById('fbar'),
+        nc: document.getElementById('nc-btn'),
+        sbTog: document.getElementById('sb-tog'),
+        thTop: document.getElementById('th-top'),
+        thSb: document.getElementById('th-sb'),
+        ca: document.getElementById('ca-btn'),
+        toasts: document.getElementById('toasts'),
+        modelBtn: document.getElementById('model-btn'),
+        modelMenu: document.getElementById('model-menu'),
+        modelName: document.getElementById('model-name'),
+        tbTitle: document.getElementById('tb-title'),
+        modelDd: document.getElementById('model-dd'),
+
+        // Extensions
+        sysBtn: document.getElementById('sys-prompt-btn'),
+        sysPanel: document.getElementById('sys-panel'),
+        sysTa: document.getElementById('sys-ta'),
+        logModeSel: document.getElementById('log-mode-select'),
+        sysSet: document.getElementById('set-global-btn'),
+        sysClr: document.getElementById('clear-global-btn'),
+        warn: document.getElementById('vision-warn'),
+        warnModel: document.getElementById('warn-model'),
+
+        // Image generation
+        modeTabs: document.getElementById('mode-tabs'),
+        tabChat: document.getElementById('tab-chat'),
+        tabImage: document.getElementById('tab-image'),
+        tabTts: document.getElementById('tab-tts'),
+        imgPanel: document.getElementById('img-panel'),
+        imgPrompt: document.getElementById('img-prompt'),
+        imgNeg: document.getElementById('img-neg'),
+        imgSteps: document.getElementById('img-steps'),
+        imgCfg: document.getElementById('img-cfg'),
+        imgWidth: document.getElementById('img-width'),
+        imgHeight: document.getElementById('img-height'),
+        imgSeed: document.getElementById('img-seed'),
+        imgSampler: document.getElementById('img-sampler'),
+        imgGenBtn: document.getElementById('img-gen-btn'),
+        imgStopOllama: document.getElementById('img-stop-ollama'),
+        imgStartOllama: document.getElementById('img-start-ollama'),
+        imgPreview: document.getElementById('img-preview'),
+        imgWarn: document.getElementById('img-warn'),
+        chatEngineDot: document.getElementById('chat-engine-dot'),
+        chatEngineStatus: document.getElementById('chat-engine-status'),
+        imgEngineDot: document.getElementById('img-engine-dot'),
+        imgEngineStatus: document.getElementById('img-engine-status'),
+        inpArea: document.getElementById('inp-area'),
+        imgProgress: document.getElementById('img-progress'),
+        imgBarFill: document.getElementById('img-bar-fill'),
+        imgStepText: document.getElementById('img-step-text'),
+        imgTimeText: document.getElementById('img-time-text'),
+        imgEtaText: document.getElementById('img-eta-text'),
+        imgResult: document.getElementById('img-result'),
+        imgResultImg: document.getElementById('img-result-img'),
+        imgParamsGrid: document.getElementById('img-params-grid'),
+        imgModal: document.getElementById('img-modal'),
+        imgModalImg: document.getElementById('img-modal-img'),
+        imgModalClose: document.getElementById('img-modal-close'),
+        imgModalDownload: document.getElementById('img-modal-download'),
+
+        // TTS
+        ttsPanel: document.getElementById('tts-panel'),
+        ttsText: document.getElementById('tts-text'),
+        ttsVoice: document.getElementById('tts-voice'),
+        ttsGenBtn: document.getElementById('tts-gen-btn'),
+        ttsResult: document.getElementById('tts-result'),
+        ttsAudioPlayer: document.getElementById('tts-audio-player'),
+        ttsDownloadLink: document.getElementById('tts-download-link'),
+        ttsEngineDot: document.getElementById('tts-engine-dot'),
+        ttsEngineStatus: document.getElementById('tts-engine-status'),
+
+        // Network
+        netUrl: document.getElementById('net-url'),
+        copyNetBtn: document.getElementById('copy-net-btn'),
+      };
+
+      // ÔöÇÔöÇ Init ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      async function init() {
+        setupMarked();
+        applyTheme(S.theme);
+        if (!S.sbOpen) D.sb.classList.add('off');
+
+        await loadGlobalPrompt();
+        await fetchModels();
+        await load();
+
+        renderSB();
+        renderChat();
+        bind();
+
+        if (S.convs.length > 0) switchConv(S.convs[0].id);
+
+        // Setup mode tabs
+        D.tabChat.addEventListener('click', () => switchMode('chat'));
+        D.tabImage.addEventListener('click', () => switchMode('image'));
+        if (D.tabTts) D.tabTts.addEventListener('click', () => switchMode('tts'));
+
+        pollHW();
+        setInterval(pollHW, 5000);
+        setInterval(fetchModels, 15000);
+      }
+
+      // ÔöÇÔöÇ Hardware Stats ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      async function pollHW() {
+        if (!IS_SERVED) return;
+        try {
+          const r = await fetch('/api/stats');
+          if (!r.ok) return;
+          const d = await r.json();
+          if (d.ram_percent === -1) return;
+          setBar('cpu', d.cpu_percent);
+          setBar('ram', d.ram_percent);
+        } catch {}
+      }
+      function setBar(type, pct) {
+        const bar = $(`#${type}-bar`);
+        const lbl = $(`#${type}-pct`);
+        if (!bar) return;
+        bar.style.transform = `scaleX(${Math.max(0, Math.min(100, pct)) / 100})`;
+        lbl.textContent = pct + '%';
+        lbl.className =
+          'hw-pct' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
+      }
+
+    // Global Prompt
+    async function loadGlobalPrompt() {
+      if (IS_SERVED) {
+        try {
+          const r = await fetch('/api/settings');
+          if (r.ok) {
+            const s = await r.json();
+            S.globalSys = s.globalSystemPrompt || '';
+            S.logMode = s.logMode === 'all' ? 'all' : 'errors_only';
+          }
+        } catch { }
+      } else {
+        S.globalSys = localStorage.getItem('globalSystemPrompt') || '';
+        S.logMode = localStorage.getItem('logMode') || 'errors_only';
+      }
+      updateSysUI();
+    }
+    async function saveGlobalPrompt() {
+      S.globalSys = D.sysTa.value.trim();
+      S.logMode = D.logModeSel.value === 'all' ? 'all' : 'errors_only';
+      if (IS_SERVED) {
+        try {
+          await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              globalSystemPrompt: S.globalSys,
+              logMode: S.logMode,
+            }),
+          });
+        } catch { }
+      } else {
+        localStorage.setItem('globalSystemPrompt', S.globalSys);
+        localStorage.setItem('logMode', S.logMode);
+      }
+      updateSysUI();
+      toast('Default prompt saved');
+    }
+    async function clearGlobalPrompt() {
+      S.globalSys = '';
+      D.sysTa.value = '';
+      S.logMode = D.logModeSel.value === 'all' ? 'all' : 'errors_only';
+      if (IS_SERVED) {
+        try {
+          await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              globalSystemPrompt: '',
+              logMode: S.logMode,
+            }),
+          });
+        } catch { }
+      } else {
+        localStorage.removeItem('globalSystemPrompt');
+        localStorage.setItem('logMode', S.logMode);
+      }
+      updateSysUI();
+      toast('Default prompt cleared');
+    }
+    async function saveLogMode() {
+      S.logMode = D.logModeSel.value === 'all' ? 'all' : 'errors_only';
+      if (IS_SERVED) {
+        try {
+          await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ logMode: S.logMode }),
+          });
+        } catch { }
+      } else {
+        localStorage.setItem('logMode', S.logMode);
+      }
+      toast(
+        S.logMode === 'all'
+          ? 'Logging: everything'
+          : 'Logging: errors only',
+      );
+    }
+    function updateSysUI() {
+      D.logModeSel.value = S.logMode === 'all' ? 'all' : 'errors_only';
+      if (S.globalSys) D.sysBtn.classList.add('has-global');
+      else D.sysBtn.classList.remove('has-global');
+    }
+
+      // ÔöÇÔöÇ Models ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      function isVision(name) {
+        return VISION_MODELS.some((v) =>
+          (name || '').toLowerCase().includes(v),
+        );
+      }
+
+      async function fetchModels() {
+        try {
+          const r = await fetch(OLLAMA + '/api/tags');
+          if (!r.ok) throw new Error();
+          const d = await r.json();
+          S.models = d.models || [];
+          renderModelMenu();
+          if (
+            S.models.length &&
+            (!S.model || !S.models.find((m) => m.name === S.model))
+          ) {
+            applyModel(S.models[0].name);
+          } else if (S.model) {
+            applyModel(S.model);
+          }
+        } catch {
+          D.modelMenu.innerHTML =
+            '<div style="padding:16px;font-size:12px;color:var(--red);text-align:center;">Engine Offline</div>';
+        }
+      }
+
+      // ── Mode Switching ─────────────────────────────────────────
+      function switchMode(mode) {
+        S.mode = mode;
+        D.tabChat.classList.toggle('act', mode === 'chat');
+        D.tabImage.classList.toggle('act', mode === 'image');
+        if (D.tabTts) D.tabTts.classList.toggle('act', mode === 'tts');
+
+        D.chat.style.display = mode === 'chat' ? 'flex' : 'none';
+        D.imgPanel.style.display = mode === 'image' ? 'flex' : 'none';
+        if (D.ttsPanel) D.ttsPanel.style.display = mode === 'tts' ? 'flex' : 'none';
+
+        if (D.inpArea) D.inpArea.style.display = mode === 'chat' ? 'block' : 'none';
+
+        if (mode === 'image' || mode === 'tts') {
+          updateEngineStatus();
+          if (mode === 'tts') fetchTtsVoices();
+          D.tbTitle.innerText = mode === 'image' ? 'Image Generation' : 'Text to Speech';
+        } else {
+          D.tbTitle.innerText = S.curId ? '' : 'New Chat';
+          // Reset progress when leaving
+          D.imgProgress.style.display = 'none';
+          D.imgResult.style.display = 'none';
+          if (D.ttsResult) D.ttsResult.style.display = 'none';
+        }
+
+        if (window.innerWidth <= 768) setSb(false);
+      }
+
+      // ── Engine Status ──────────────────────────────────────────
+      async function updateEngineStatus() {
+        try {
+          const r = await fetch('/api/engine-status');
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({ error: 'Server error' }));
+            throw new Error(err.error || `HTTP ${r.status}`);
+          }
+          const d = await r.json();
+          const ollamaUp = d.ollama;
+          const sdReady = d.sd_enabled;
+          const sdHealthy = d.sd_healthy;
+          const ttsReady = d.tts_enabled && d.tts_binary;
+
+          // Image engine row
+          if (D.imgEngineDot) {
+            if (!sdReady) {
+              D.imgEngineDot.className = 'img-engine-dot off';
+              D.imgEngineStatus.textContent = 'Not Installed';
+              D.imgGenBtn.disabled = true;
+            } else if (!sdHealthy) {
+              D.imgEngineDot.className = 'img-engine-dot warn';
+              D.imgEngineStatus.textContent = 'Issue Detected';
+              D.imgWarn.innerHTML = '<strong>⚠️ Image engine error</strong><br>The image engine is present but failed to initialize correctly.';
+              D.imgWarn.style.display = 'block';
+              D.imgGenBtn.disabled = true;
+            } else {
+              D.imgEngineDot.className = 'img-engine-dot on';
+              D.imgEngineStatus.textContent = 'Ready';
+              D.imgWarn.style.display = 'none';
+            }
+          }
+
+          // TTS engine row
+          if (D.ttsEngineDot) {
+            if (ttsReady) {
+              D.ttsEngineDot.className = 'img-engine-dot on';
+              D.ttsEngineStatus.textContent = 'Ready';
+              if (D.ttsGenBtn) D.ttsGenBtn.disabled = false;
+            } else {
+              D.ttsEngineDot.className = 'img-engine-dot off';
+              D.ttsEngineStatus.textContent = 'Not Installed';
+              if (D.ttsGenBtn) D.ttsGenBtn.disabled = true;
+            }
+          }
+
+          // Chat engine row
+          if (D.chatEngineDot) {
+            if (ollamaUp) {
+              D.chatEngineDot.className = 'img-engine-dot on';
+              D.chatEngineStatus.textContent = 'Running';
+              if (D.imgStopOllama) D.imgStopOllama.style.display = 'inline-block';
+              if (D.imgStartOllama) D.imgStartOllama.style.display = 'none';
+              if (S.mode === 'image' && D.imgGenBtn) D.imgGenBtn.disabled = true;
+            } else {
+              D.chatEngineDot.className = 'img-engine-dot off';
+              D.chatEngineStatus.textContent = 'Stopped';
+              if (D.imgStopOllama) D.imgStopOllama.style.display = 'none';
+              if (D.imgStartOllama) D.imgStartOllama.style.display = 'inline-block';
+              if (S.mode === 'image' && sdReady && sdHealthy && D.imgGenBtn) {
+                D.imgGenBtn.disabled = false;
+              }
+            }
+          }
+
+          // Network Info
+          if (D.netUrl && d.local_ip) {
+            const url = `http://${d.local_ip}:${d.port || 3333}`;
+            D.netUrl.textContent = url;
+            D.copyNetBtn.onclick = () => {
+              navigator.clipboard.writeText(url).then(() => toast('URL copied to clipboard'));
+            };
+          }
+        } catch (e) {
+          console.error('Engine status update failed:', e);
+          if (D.chatEngineDot) {
+            D.chatEngineDot.className = 'img-engine-dot warn';
+            D.chatEngineStatus.textContent = 'Unknown';
+          }
+          if (D.imgEngineDot) {
+            D.imgEngineDot.className = 'img-engine-dot warn';
+            D.imgEngineStatus.textContent = 'Unknown';
+          }
+          if (D.ttsEngineDot) {
+            D.ttsEngineDot.className = 'img-engine-dot warn';
+            D.ttsEngineStatus.textContent = 'Unknown';
+          }
+          if (D.imgWarn) {
+            D.imgWarn.innerHTML = `<strong>⚠️ Connection Issue</strong><br>Cannot reach the backend server: ${e.message}`;
+            D.imgWarn.style.display = 'block';
+          }
+          if (D.imgGenBtn) D.imgGenBtn.disabled = true;
+        }
+      }
+
+      async function waitForEngineState(desiredOllamaState, maxWaitMs = 15000) {
+        const interval = 1000;
+        const start = Date.now();
+        while (Date.now() - start < maxWaitMs) {
+          try {
+            const r = await fetch('/api/engine-status');
+            const d = await r.json();
+            if (d.ollama === desiredOllamaState) {
+              await updateEngineStatus();
+              return true;
+            }
+          } catch {}
+          await new Promise((res) => setTimeout(res, interval));
+        }
+        await updateEngineStatus();
+        return false;
+      }
+
+      // ── Image Generation ───────────────────────────────────────
+      function fmtMs(ms) {
+        if (!ms || ms < 0) return '';
+        const sec = Math.floor(ms / 1000);
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
+      }
+
+      function showImgProgress() {
+        // Clear any stale error/status messages
+        D.imgPreview.querySelectorAll('.img-status').forEach((el) => el.remove());
+        D.imgProgress.style.display = 'flex';
+        D.imgResult.style.display = 'none';
+        D.imgBarFill.style.width = '0%';
+        D.imgStepText.textContent = 'Starting...';
+        D.imgTimeText.textContent = '0s';
+        D.imgEtaText.textContent = '';
+      }
+
+      function hideImgProgress() {
+        D.imgProgress.style.display = 'none';
+      }
+
+      function updateImgProgressUI(data) {
+        const step = data.step || 0;
+        const total = data.total_steps || 0;
+        const elapsed = data.elapsed_ms || 0;
+        const eta = data.eta_ms;
+
+        if (total > 0) {
+          const pct = Math.min(100, Math.round((step / total) * 100));
+          D.imgBarFill.style.width = `${pct}%`;
+          D.imgStepText.textContent = `Step ${step} / ${total}`;
+        } else {
+          D.imgStepText.textContent = 'Working...';
+        }
+
+        D.imgTimeText.textContent = fmtMs(elapsed);
+
+        if (eta && eta > 0 && step > 0 && step < total) {
+          D.imgEtaText.textContent = `ETA: ${fmtMs(eta)} remaining`;
+        } else if (step >= total && total > 0) {
+          D.imgEtaText.textContent = 'Finishing up...';
+        } else {
+          D.imgEtaText.textContent = 'Calculating ETA...';
+        }
+      }
+
+      function showImgResult(data) {
+        hideImgProgress();
+        D.imgResult.style.display = 'flex';
+        D.imgResultImg.src = `data:${data.mime_type};base64,${data.image_b64}`;
+        D.imgResultImg.style.cursor = 'zoom-in';
+        D.imgResultImg.onclick = () => openImgModal(data.image_b64, data.mime_type);
+
+        const p = data.params || {};
+        const rows = [
+          { k: 'Resolution', v: `${p.width || 512} × ${p.height || 512}` },
+          { k: 'Steps', v: p.steps || 20 },
+          { k: 'CFG Scale', v: p.cfg_scale || 7.0 },
+          { k: 'Sampler', v: p.sampling_method || 'euler_a' },
+          { k: 'Seed', v: p.seed ?? -1 },
+          { k: 'Model', v: 'CyberRealistic v3.3' },
+        ];
+        if (p.negative_prompt) {
+          rows.push({ k: 'Negative', v: p.negative_prompt });
+        }
+        D.imgParamsGrid.innerHTML = rows
+          .map((r) => `<div class="img-param"><span class="img-param-key">${esc(r.k)}</span><span class="img-param-val">${esc(String(r.v))}</span></div>`)
+          .join('');
+      }
+
+      async function generateImage() {
+        const prompt = D.imgPrompt.value.trim();
+        if (!prompt) {
+          toast('Please enter a prompt.');
+          return;
+        }
+        D.imgGenBtn.disabled = true;
+        showImgProgress();
+
+        const payload = {
+          prompt,
+          negative_prompt: D.imgNeg.value.trim(),
+          steps: parseInt(D.imgSteps.value, 10) || 20,
+          cfg_scale: parseFloat(D.imgCfg.value) || 7.0,
+          width: parseInt(D.imgWidth.value, 10) || 512,
+          height: parseInt(D.imgHeight.value, 10) || 512,
+          seed: parseInt(D.imgSeed.value, 10),
+          sampling_method: D.imgSampler.value,
+        };
+
+        let jobId = null;
+        let pollInterval = null;
+
+        try {
+          const startR = await fetch('/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const startD = await startR.json();
+          if (!startR.ok || startD.error) {
+            const msg = startD.error || 'Failed to start image generation.';
+            hideImgProgress();
+            D.imgResult.style.display = 'none';
+            D.imgPreview.insertAdjacentHTML('beforeend', `<div class="img-status" style="color:var(--red); margin-top:12px;">${esc(msg)}</div>`);
+            D.imgGenBtn.disabled = false;
+            if (startD.needs_stop) await updateEngineStatus();
+            return;
+          }
+
+          jobId = startD.job_id;
+
+          // Poll progress every 1.2 seconds
+          pollInterval = setInterval(async () => {
+            if (!jobId) return;
+            try {
+              const pr = await fetch(`/api/image-progress?job_id=${encodeURIComponent(jobId)}`);
+              const pd = await pr.json();
+              if (!pr.ok) return;
+
+              if (pd.status === 'done') {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                showImgResult(pd);
+                D.imgGenBtn.disabled = false;
+              } else if (pd.status === 'error') {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                hideImgProgress();
+                D.imgResult.style.display = 'none';
+                D.imgPreview.insertAdjacentHTML('beforeend', `<div class="img-status" style="color:var(--red); margin-top:12px;">${esc(pd.error || 'Generation failed.')}</div>`);
+                D.imgGenBtn.disabled = false;
+              } else {
+                updateImgProgressUI(pd);
+              }
+            } catch {
+              // Ignore poll errors
+            }
+          }, 1200);
+        } catch (e) {
+          hideImgProgress();
+          D.imgResult.style.display = 'none';
+          D.imgPreview.insertAdjacentHTML('beforeend', `<div class="img-status" style="color:var(--red); margin-top:12px;">Network error: ${esc(e.message || 'Failed to generate image.')}</div>`);
+          D.imgGenBtn.disabled = false;
+          if (pollInterval) clearInterval(pollInterval);
+        }
+      }
+
+      // ── Image Lightbox ─────────────────────────────────────────
+      function openImgModal(b64Data, mimeType) {
+        D.imgModalImg.src = `data:${mimeType};base64,${b64Data}`;
+        D.imgModal.classList.add('on');
+        // Set download handler
+        D.imgModalDownload.onclick = () => {
+          const link = document.createElement('a');
+          link.href = `data:${mimeType};base64,${b64Data}`;
+          link.download = `generated_${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        };
+      }
+
+      function closeImgModal() {
+        D.imgModal.classList.remove('on');
+        D.imgModalImg.src = '';
+      }
+
+      async function stopChatEngine() {
+        D.imgStopOllama.disabled = true;
+        D.chatEngineStatus.textContent = 'Stopping...';
+        try {
+          await fetch('/api/stop-ollama', { method: 'POST' });
+          const stopped = await waitForEngineState(false);
+          toast(stopped ? 'Chat engine unloaded.' : 'Chat engine stop timed out — may still be running.');
+        } catch {
+          toast('Failed to stop chat engine.');
+          await updateEngineStatus();
+        }
+        D.imgStopOllama.disabled = false;
+      }
+
+      async function startChatEngine() {
+        D.imgStartOllama.disabled = true;
+        D.chatEngineStatus.textContent = 'Starting...';
+        try {
+          await fetch('/api/start-ollama', { method: 'POST' });
+          const started = await waitForEngineState(true);
+          toast(started ? 'Chat engine loaded.' : 'Chat engine start timed out.');
+        } catch {
+          toast('Failed to start chat engine.');
+          await updateEngineStatus();
+        }
+        D.imgStartOllama.disabled = false;
+      }
+
+      function renderModelMenu() {
+        if (!S.models.length) return;
+        D.modelMenu.innerHTML = S.models
+          .map(
+            (m) => `
+        <div class="mm-opt ${m.name === S.model ? 'sel' : ''}" data-model="${m.name}">
+            <div class="mmo-icon"><i class="fa-solid ${isVision(m.name) ? 'fa-eye' : 'fa-microchip'}"></i></div>
+            <div class="mmo-info">
+                <div class="mmo-name">${esc(m.name)}</div>
+                <div class="mmo-desc">${(m.size / 1e9).toFixed(1)} GB</div>
+            </div>
+            <i class="fa-solid fa-check mmo-chk"></i>
+        </div>`,
+          )
+          .join('');
+
+        $$('.mm-opt').forEach((opt) =>
+          opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const model = opt.dataset.model;
+            applyModel(model);
+            const conv = getConv();
+            if (conv) {
+              conv.model = model;
+              save();
+            }
+            toggleModelMenu(false);
+          }),
+        );
+      }
+
+      function applyModel(model) {
+        S.model = model;
+        localStorage.setItem('g-model', model);
+        D.modelName.textContent = model;
+        $$('.mm-opt').forEach((opt) =>
+          opt.classList.toggle('sel', opt.dataset.model === model),
+        );
+        checkVisionWarn();
+      }
+
+      function toggleModelMenu(show) {
+        const isOpen = D.modelMenu.classList.contains('on');
+        const shouldOpen = show !== undefined ? show : !isOpen;
+        D.modelMenu.classList.toggle('on', shouldOpen);
+        D.modelBtn.classList.toggle('open', shouldOpen);
+      }
+
+      // ÔöÇÔöÇ File Attachments ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      async function handleAttach(files) {
+        const list = Array.from(files || []).filter(Boolean);
+        if (!list.length) return;
+
+        let added = 0;
+        let rejected = 0;
+        for (const file of list) {
+          const ok = await handleSingleAttachment(file);
+          if (ok) added++;
+          else rejected++;
+        }
+
+        if (added) {
+          renderAttachmentBar();
+          checkVisionWarn();
+          updateSend();
+        }
+        if (rejected) {
+          toast(
+            rejected === list.length
+              ? 'No supported files selected'
+              : `${rejected} file(s) skipped`,
+          );
+        }
+      }
+
+      async function handleSingleAttachment(file) {
+        if (!file) return false;
+        const name = file.name.toLowerCase();
+        if (file.type.startsWith('image/')) return handleImg(file);
+        if (file.type === 'application/pdf' || name.endsWith('.pdf'))
+          return handlePdf(file);
+        if (
+          file.type === 'text/plain' ||
+          name.endsWith('.md') ||
+          name.endsWith('.txt')
+        )
+          return handleText(file);
+        return false;
+      }
+
+      function handleImg(file) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const src = e.target.result;
+            const b64 = src.split(',')[1];
+            S.attachments.push({
+              id: gid(),
+              type: 'image',
+              name: file.name,
+              mime: file.type || 'image/jpeg',
+              b64,
+              previewUrl: src,
+            });
+            resolve(true);
+          };
+          reader.onerror = () => resolve(false);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function removeAttachment(id) {
+        S.attachments = S.attachments.filter((a) => a.id !== id);
+        renderAttachmentBar();
+        checkVisionWarn();
+        updateSend();
+      }
+
+      function clearAttachments() {
+        if (!S.attachments.length) return;
+        S.attachments = [];
+        renderAttachmentBar();
+        checkVisionWarn();
+        updateSend();
+      }
+
+      function renderAttachmentBar() {
+        if (!S.attachments.length) {
+          D.fBar.classList.remove('on');
+          D.fBar.innerHTML = '';
+          return;
+        }
+
+        D.fBar.classList.add('on');
+        D.fBar.innerHTML = S.attachments
+          .map((a) => {
+            if (a.type === 'image') {
+              return `<div class="img-preview"><img src="${a.previewUrl}" alt="${esc(a.name)}"><button class="f-rm" onclick="removeAttachment('${a.id}')"><i class="fa-solid fa-xmark"></i></button></div>`;
+            }
+            const icon = a.kind === 'pdf' ? 'fa-file-pdf' : 'fa-file-lines';
+            const meta =
+              a.kind === 'pdf'
+                ? `${a.pages || '?'} page${a.pages === 1 ? '' : 's'}`
+                : `Text file · ~${(a.text || '').length.toLocaleString()} chars`;
+            return `<div class="pdf-preview"><i class="fa-solid ${icon}" style="color:var(--grad1);font-size:22px;"></i><div class="p-info"><strong>${esc(a.name)}</strong><span>${meta}</span></div><button class="f-rm" onclick="removeAttachment('${a.id}')"><i class="fa-solid fa-xmark"></i></button></div>`;
+          })
+          .join('');
+      }
+
+      function checkVisionWarn() {
+        const hasImage = S.attachments.some((a) => a.type === 'image');
+        if (!hasImage) {
+          D.warn.classList.remove('on');
+          return;
+        }
+        if (!isVision(S.model)) {
+          D.warnModel.textContent = S.model;
+          D.warn.classList.add('on');
+        } else D.warn.classList.remove('on');
+      }
+
+      let pdfJsLoading = false;
+      async function ensurePdfJs() {
+        if (window.pdfjsLib) return true;
+        if (pdfJsLoading)
+          return new Promise((res) => {
+            const iv = setInterval(() => {
+              if (window.pdfjsLib || window._pdfFailed) {
+                clearInterval(iv);
+                res(!!window.pdfjsLib);
+              }
+            }, 100);
+          });
+        pdfJsLoading = true;
+        try {
+          const m = await import('./vendor/pdf.min.mjs');
+          window.pdfjsLib = m;
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            './vendor/pdf.worker.min.mjs';
+          return true;
+        } catch {
+          window._pdfFailed = true;
+          return false;
+        }
+      }
+
+      async function handlePdf(file) {
+        const ok = await ensurePdfJs();
+        if (!ok) return false;
+
+        try {
+          const buf = await file.arrayBuffer();
+          const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+          let text = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const pg = await pdf.getPage(i);
+            const c = await pg.getTextContent();
+            text +=
+              `--- Page ${i} ---\n` +
+              c.items.map((x) => x.str).join(' ') +
+              '\n\n';
+          }
+          S.attachments.push({
+            id: gid(),
+            type: 'doc',
+            kind: 'pdf',
+            name: file.name,
+            text: text.trim(),
+            pages: pdf.numPages,
+          });
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function handleText(file) {
+        const text = await file.text();
+        S.attachments.push({
+          id: gid(),
+          type: 'doc',
+          kind: 'text',
+          name: file.name,
+          text,
+          pages: 0,
+        });
+        return true;
+      }
+
+      // ÔöÇÔöÇ Conversation CRUD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      function createConv() {
+        const c = {
+          id: gid(),
+          title: 'New chat',
+          msgs: [],
+          ts: Date.now(),
+          model: S.model,
+          sys: S.globalSys,
+        };
+        S.convs.unshift(c);
+        save();
+        switchConv(c.id);
+        renderSB();
+        D.inp.focus();
+      }
+
+      function delConv(id) {
+        S.convs = S.convs.filter((c) => c.id !== id);
+        save();
+        if (S.curId === id) {
+          S.curId = null;
+          S.convs.length > 0 ? switchConv(S.convs[0].id) : renderChat();
+        }
+        renderSB();
+        toast('Chat deleted');
+      }
+
+      function clearAll() {
+        S.convs = [];
+        S.curId = null;
+        save();
+        renderSB();
+        renderChat();
+        toast('All chats cleared');
+      }
+
+      function switchConv(id) {
+        S.curId = id;
+        const conv = getConv();
+        if (conv && conv.model) applyModel(conv.model);
+        D.sysTa.value = conv?.sys || '';
+        renderChat();
+        renderSB();
+        updateTitle();
+        if (window.innerWidth <= 768) toggleSB(false);
+      }
+      function getConv() {
+        return S.convs.find((c) => c.id === S.curId);
+      }
+
+      // ÔöÇÔöÇ Send / Stream to Ollama ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      async function sendMsg(text) {
+        if ((!text.trim() && !S.attachments.length) || S.streaming) return;
+
+        let conv = getConv();
+        if (!conv) {
+          conv = {
+            id: gid(),
+            title: 'New chat',
+            msgs: [],
+            ts: Date.now(),
+            model: S.model,
+            sys: D.sysTa.value.trim(),
+          };
+          S.convs.unshift(conv);
+          S.curId = conv.id;
+        } else {
+          conv.model = S.model;
+          conv.sys = D.sysTa.value.trim();
+          // Defensive: heal conv that somehow has no msgs array
+          if (!Array.isArray(conv.msgs)) conv.msgs = [];
+        }
+
+        const baseText = text.trim();
+        const docAttachments = S.attachments.filter((a) => a.type === 'doc');
+        const imageAttachments = S.attachments.filter(
+          (a) => a.type === 'image',
+        );
+
+        let finalText = baseText;
+        if (docAttachments.length) {
+          const blocks = docAttachments
+            .map((a, idx) => {
+              const maxChars = 12000;
+              const body =
+                (a.text || '').length > maxChars
+                  ? (a.text || '').slice(0, maxChars) + '\n\n[truncated...]'
+                  : a.text || '';
+              return `Document ${idx + 1}: "${a.name}"\n\n${body}`;
+            })
+            .join('\n\n====================\n\n');
+          finalText = `Attached document context:\n\n${blocks}\n\n---\nUser: ${baseText || '[no text]'}`;
+        }
+
+        const msgObj = {
+          id: gid(),
+          role: 'user',
+          content: finalText,
+          displayContent: baseText,
+          ts: Date.now(),
+        };
+        if (imageAttachments.length) {
+          msgObj.images = imageAttachments.map((a) => a.b64);
+        }
+        if (S.attachments.length) {
+          msgObj._attachments = S.attachments.map((a) => ({
+            id: a.id,
+            type: a.type,
+            kind: a.kind || null,
+            name: a.name,
+            mime: a.mime || null,
+            b64: a.type === 'image' ? a.b64 : null,
+          }));
+        }
+
+        conv.msgs.push(msgObj);
+        if (conv.msgs.length === 1)
+          conv.title =
+            text.trim().substring(0, 40) +
+            (text.trim().length > 40 ? '...' : '');
+
+        D.inp.value = '';
+        D.inp.style.height = 'auto';
+        D.iw.classList.remove('ht');
+        clearAttachments();
+        updateSend();
+        save();
+        renderChat();
+        renderSB();
+        updateTitle();
+        scrollEnd();
+
+        await streamOllama(conv);
+      }
+
+      async function streamOllama(conv) {
+        S.streaming = true;
+        updateSend();
+
+        const aiMsg = {
+          id: gid(),
+          role: 'assistant',
+          content: '',
+          ts: Date.now(),
+          liked: false,
+          disliked: false,
+        };
+        conv.msgs.push(aiMsg);
+        renderChat();
+        scrollEnd();
+
+        const lastRow = D.msgs.lastElementChild;
+        const contentEl = lastRow ? lastRow.querySelector('.mt') : null;
+        if (contentEl)
+          contentEl.innerHTML =
+            '<div class="typ"><span></span><span></span><span></span></div>';
+
+        S.abort = new AbortController();
+        let apiMsgs = [];
+        if (conv.sys) apiMsgs.push({ role: 'system', content: conv.sys });
+        conv.msgs.slice(0, -1).forEach((m) => {
+          const am = { role: m.role, content: m.content };
+          if (m.images) am.images = m.images;
+          apiMsgs.push(am);
+        });
+
+        try {
+          const res = await fetch(OLLAMA + '/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: conv.model,
+              messages: apiMsgs,
+              stream: true,
+              options: {
+                temperature:
+                  parseFloat(document.getElementById('temp-input')?.value) ||
+                  0.7,
+              },
+            }),
+            signal: S.abort.signal,
+          });
+          if (!res.ok) throw new Error('Ollama error ' + res.status);
+
+          const reader = res.body.getReader();
+          const dec = new TextDecoder();
+          if (contentEl) contentEl.innerHTML = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = dec.decode(value, { stream: true });
+            for (const line of chunk.split('\n')) {
+              if (!line.trim()) continue;
+              try {
+                const p = JSON.parse(line);
+                if (p.message?.content) {
+                  aiMsg.content += p.message.content;
+                  if (contentEl) contentEl.textContent = aiMsg.content;
+                  scrollEnd();
+                }
+              } catch {}
+            }
+          }
+          if (contentEl) {
+            contentEl.innerHTML = renderMd(aiMsg.content);
+            contentEl.querySelectorAll('pre code').forEach((b) => {
+              if (!b.classList.contains('hljs')) hljs.highlightElement(b);
+            });
+          }
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            if (aiMsg.content) {
+              if (contentEl) contentEl.innerHTML = renderMd(aiMsg.content);
+            } else if (contentEl)
+              contentEl.innerHTML =
+                '<span style="color:var(--t3);font-style:italic;">[Stopped]</span>';
+          } else {
+            if (contentEl)
+              contentEl.innerHTML = `<span style="color:var(--red);">ÔÜá ${esc(err.message)}</span>`;
+            conv.msgs.pop();
+          }
+        } finally {
+          S.streaming = false;
+          updateSend();
+          save();
+          scrollEnd();
+          setTimeout(() => D.inp.focus(), 100);
+        }
+      }
+
+      function stopStream() {
+        if (S.abort) S.abort.abort();
+      }
+
+      // ÔöÇÔöÇ Markdown ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      function setupMarked() {
+        if (typeof marked === 'undefined') return;
+        const rdr = new marked.Renderer();
+        rdr.code = (code, lang) => {
+          const sl = esc(lang || '');
+          const dl = sl || 'code';
+          let hi = esc(code);
+          if (typeof hljs !== 'undefined') {
+            try {
+              hi =
+                lang && hljs.getLanguage(lang)
+                  ? hljs.highlight(code, { language: lang }).value
+                  : hljs.highlightAuto(code).value;
+            } catch {}
+          }
+          return `<div class="cblk"><div class="cbh"><span>${dl}</span><button class="cbc-btn" onclick="copyCB(this)"><i class="fa-regular fa-copy"></i> Copy</button></div><pre><code class="hljs${sl ? ' language-' + sl : ''}">${hi}</code></pre></div>`;
+        };
+        marked.setOptions({ gfm: true, breaks: true, renderer: rdr });
+      }
+      function renderMd(text) {
+        if (typeof marked === 'undefined')
+          return esc(text).replace(/\n/g, '<br>');
+        return marked.parse(text, { breaks: true });
+      }
+
+      // ÔöÇÔöÇ Rendering ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      function renderSB() {
+        D.cvList.innerHTML = S.convs
+          .map(
+            (c) => `
+        <div class="cv ${c.id === S.curId ? 'act' : ''}" onclick="switchConv('${c.id}')">
+            <i class="fa-regular fa-message ci"></i>
+            <span class="ct">${esc(c.title)}</span>
+            <button class="cd" onclick="event.stopPropagation();delConv('${c.id}')" aria-label="Delete chat">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>`,
+          )
+          .join('');
+      }
+
+      function renderChat() {
+        const conv = getConv();
+        if (!conv || conv.msgs.length === 0) {
+          D.welcome.style.display = 'flex';
+          D.msgs.classList.remove('on');
+          D.msgs.innerHTML = '';
+          D.tbTitle.textContent = '';
+          return;
+        }
+        D.welcome.style.display = 'none';
+        D.msgs.classList.add('on');
+        D.tbTitle.textContent = conv.title;
+
+        D.msgs.innerHTML = conv.msgs
+          .map((msg, i) =>
+            msg.role === 'user'
+              ? renderUser(msg)
+              : renderAI(msg, i === conv.msgs.length - 1),
+          )
+          .join('');
+
+        D.msgs.querySelectorAll('pre code:not(.hljs)').forEach((b) => {
+          hljs.highlightElement(b);
+        });
+        scrollEnd();
+      }
+
+      function renderUser(msg) {
+        let media = '';
+        const atts = Array.isArray(msg._attachments) ? msg._attachments : [];
+        atts.forEach((a) => {
+          if (a.type === 'image' && a.b64) {
+            media += `<img class="msg-img" src="data:${a.mime || 'image/jpeg'};base64,${a.b64}">`;
+            return;
+          }
+          if (a.type === 'doc') {
+            const icon = a.kind === 'pdf' ? 'fa-file-pdf' : 'fa-file-lines';
+            media += `<div class="msg-pdf-pill"><i class="fa-solid ${icon}" style="color:var(--grad1)"></i>${esc(a.name || 'Document')}</div>`;
+          }
+        });
+
+        let rawTxt = msg.displayContent || msg.content;
+        if (!msg.displayContent && rawTxt.includes('\n\n---\nUser: ')) {
+          rawTxt = rawTxt.split('\n\n---\nUser: ').pop() || '';
+        }
+        const textBubble = rawTxt.trim()
+          ? `<div class="ub"><div class="mt">${esc(rawTxt)}</div></div>`
+          : '';
+        const mediaEl = media ? `<div class="usr-attach">${media}</div>` : '';
+        return `<div class="mr usr"><div class="mc">${textBubble}${mediaEl}</div><div class="ma u">U</div></div>`;
+      }
+
+      function renderAI(msg, isLast) {
+        const parsed =
+          S.streaming && isLast ? esc(msg.content) : renderMd(msg.content);
+        const actions =
+          !S.streaming || !isLast
+            ? `
+        <div class="mact">
+            <button class="mab" onclick="copyMsg('${msg.id}')" title="Copy"><i class="fa-regular fa-copy"></i></button>
+            <button class="mab ${msg.liked ? 'lk' : ''}" onclick="rateMsg('${msg.id}','like')" title="Good response"><i class="fa-regular fa-thumbs-up"></i></button>
+            <button class="mab ${msg.disliked ? 'dlk' : ''}" onclick="rateMsg('${msg.id}','dislike')" title="Bad response"><i class="fa-regular fa-thumbs-down"></i></button>
+        </div>`
+            : '';
+
+        return `<div class="mr">
+        <div class="ma ai"><svg viewBox="0 0 24 24"><path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="white"/></svg></div>
+        <div class="mc"><div class="mt">${parsed || ''}</div>${actions}</div>
+    </div>`;
+      }
+
+      // ÔöÇÔöÇ Actions ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      function copyMsg(id) {
+        const m = getConv()?.msgs.find((x) => x.id === id);
+        if (m)
+          navigator.clipboard.writeText(m.content).then(() => toast('Copied'));
+      }
+      function rateMsg(id, r) {
+        const m = getConv()?.msgs.find((x) => x.id === id);
+        if (!m) return;
+        if (r === 'like') {
+          m.liked = !m.liked;
+          m.disliked = false;
+        } else {
+          m.disliked = !m.disliked;
+          m.liked = false;
+        }
+        save();
+        renderChat();
+      }
+      function copyCB(btn) {
+        const code = btn.closest('.cblk').querySelector('code').innerText;
+        navigator.clipboard.writeText(code).then(() => {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+          setTimeout(
+            () => (btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'),
+            2000,
+          );
+        });
+      }
+
+      function applyTheme(t) {
+        S.theme = t;
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('g-theme', t);
+        const ic = t === 'dark' ? 'fa-moon' : 'fa-sun';
+        D.thTop.querySelector('i').className = 'fa-solid ' + ic;
+        D.thSb.querySelector('i').className = 'fa-solid ' + ic;
+      }
+      function toggleTheme() {
+        applyTheme(S.theme === 'dark' ? 'light' : 'dark');
+      }
+      function toggleSB(force) {
+        S.sbOpen = force !== undefined ? force : !S.sbOpen;
+        D.sb.classList.toggle('off', !S.sbOpen);
+        D.ov.classList.toggle('on', S.sbOpen && window.innerWidth <= 768);
+      }
+
+      function updateSend() {
+        const has = D.inp.value.trim().length > 0 || S.attachments.length > 0;
+        D.iw.classList.toggle('ht', has);
+        if (S.streaming) {
+          D.send.className = 'ib2 stbtn';
+          D.send.innerHTML = '<i class="fa-solid fa-stop"></i>';
+          D.send.disabled = false;
+        } else {
+          D.send.className = 'ib2 sbtn' + (has ? ' on' : '');
+          D.send.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+          D.send.disabled = !has;
+        }
+      }
+      function autoResize() {
+        D.inp.style.height = 'auto';
+        D.inp.style.height = Math.min(D.inp.scrollHeight, 200) + 'px';
+      }
+      function scrollEnd() {
+        D.chat.scrollTop = D.chat.scrollHeight;
+      }
+      function updateTitle() {
+        D.tbTitle.textContent = getConv()?.title || '';
+      }
+      function toast(msg) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = msg;
+        D.toasts.appendChild(t);
+        setTimeout(() => t.classList.add('on'), 10);
+        setTimeout(() => {
+          t.classList.remove('on');
+          setTimeout(() => t.remove(), 300);
+        }, 3000);
+      }
+
+      function gid() {
+        return (
+          Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
+        );
+      }
+
+      // ── Text to Speech ──────────────────────────────────────────
+      async function fetchTtsVoices() {
+        try {
+          const r = await fetch('/api/tts-voices');
+          const d = await r.json();
+          if (d.voices && d.voices.length > 0) {
+            D.ttsVoice.innerHTML = d.voices
+              .map((v) => `<option value="${v.id}">${v.name}</option>`)
+              .join('');
+          } else {
+            D.ttsVoice.innerHTML = '<option value="">No voices found</option>';
+          }
+        } catch (e) {
+          console.error('Failed to load TTS voices:', e);
+        }
+      }
+
+      async function generateTts() {
+        const text = D.ttsText.value.trim();
+        const voice = D.ttsVoice.value;
+
+        if (!text) {
+          toast('Please enter some text.', 'orange');
+          return;
+        }
+        if (!voice) {
+          toast('Please select a voice.', 'orange');
+          return;
+        }
+
+        D.ttsGenBtn.disabled = true;
+        const oldHtml = D.ttsGenBtn.innerHTML;
+        D.ttsGenBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+        D.ttsResult.style.display = 'none';
+
+        try {
+          const r = await fetch('/api/generate-tts', {
+            method: 'POST',
+            body: JSON.stringify({ text, voice }),
+          });
+
+          if (!r.ok) {
+            const err = await r.json();
+            throw new Error(err.error || 'Failed to generate speech');
+          }
+
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+
+          D.ttsAudioPlayer.src = url;
+          D.ttsDownloadLink.href = url;
+          D.ttsDownloadLink.download = `speech_${Date.now()}.wav`;
+          D.ttsResult.style.display = 'flex';
+          D.ttsAudioPlayer.play();
+
+          toast('Speech generated!', 'green');
+        } catch (e) {
+          console.error(e);
+          toast(e.message || 'Error generating TTS', 'red');
+        } finally {
+          D.ttsGenBtn.disabled = false;
+          D.ttsGenBtn.innerHTML = oldHtml;
+        }
+      }
+
+      function esc(t) {
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+      }
+
+      async function load() {
+        const c = localStorage.getItem('g-convs');
+        const m = localStorage.getItem('g-model');
+        if (c) S.convs = JSON.parse(c);
+        if (m) S.model = m;
+
+        if (IS_SERVED) {
+          try {
+            const r = await fetch('/api/chats');
+            if (r.ok) S.convs = await r.json();
+          } catch {}
+        }
+      }
+
+      function save() {
+        localStorage.setItem('g-convs', JSON.stringify(S.convs));
+        if (IS_SERVED) {
+          fetch('/api/chats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(S.convs),
+          });
+        }
+      }
+
+      function bind() {
+        D.send.addEventListener('click', () =>
+          S.streaming ? stopStream() : sendMsg(D.inp.value),
+        );
+        D.inp.addEventListener('input', () => {
+          autoResize();
+          updateSend();
+        });
+        D.inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!S.streaming) sendMsg(D.inp.value);
+          }
+          if (e.key === 'Escape' && S.streaming) stopStream();
+        });
+        D.nc.addEventListener('click', () => {
+          if (!S.streaming) createConv();
+        });
+        D.sbTog.addEventListener('click', () => toggleSB());
+        D.ov.addEventListener('click', () => toggleSB(false));
+        D.thTop.addEventListener('click', toggleTheme);
+        D.thSb.addEventListener('click', toggleTheme);
+        D.ca.addEventListener('click', () => {
+          if (!S.streaming) clearAll();
+        });
+        D.att.addEventListener('click', () => D.fInp.click());
+        D.fInp.addEventListener('change', async (e) => {
+          await handleAttach(e.target.files);
+          e.target.value = '';
+        });
+        $$('.sc').forEach((c) =>
+          c.addEventListener('click', () => {
+            const p = c.dataset.prompt;
+            if (p) sendMsg(p);
+          }),
+        );
+
+      // Panel toggles
+      D.modelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleModelMenu();
+        D.sysPanel.classList.remove('open');
+      });
+      D.sysBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        D.sysPanel.classList.toggle('open');
+        toggleModelMenu(false);
+      });
+      D.logModeSel.addEventListener('change', saveLogMode);
+      D.sysSet.addEventListener('click', saveGlobalPrompt);
+      D.sysClr.addEventListener('click', clearGlobalPrompt);
+
+        // Image generation bindings
+        D.imgGenBtn.addEventListener('click', generateImage);
+        D.imgStopOllama.addEventListener('click', stopChatEngine);
+        D.imgStartOllama.addEventListener('click', startChatEngine);
+
+        // TTS bindings
+        if (D.ttsGenBtn) D.ttsGenBtn.addEventListener('click', generateTts);
+
+        // Image lightbox bindings
+        D.imgModalClose.addEventListener('click', closeImgModal);
+        D.imgModal.addEventListener('click', (e) => {
+          if (e.target === D.imgModal) closeImgModal();
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && D.imgModal.classList.contains('on')) closeImgModal();
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!D.modelDd.contains(e.target)) toggleModelMenu(false);
+          if (!D.sysPanel.contains(e.target) && !D.sysBtn.contains(e.target))
+            D.sysPanel.classList.remove('open');
+        });
+        window.addEventListener('resize', () => {
+          if (window.innerWidth <= 768 && S.sbOpen) toggleSB(false);
+        });
+
+        // Drag-and-drop (image / PDF / text files)
+        const mainEl = document.getElementById('main');
+        mainEl.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          mainEl.classList.add('drag-over');
+        });
+        mainEl.addEventListener('dragleave', () =>
+          mainEl.classList.remove('drag-over'),
+        );
+        mainEl.addEventListener('drop', (e) => {
+          e.preventDefault();
+          mainEl.classList.remove('drag-over');
+          handleAttach(e.dataTransfer.files);
+        });
+      }
+
+      // ── Start ──────────────────────────────────────────────────
+      init();
+    </script>
+  </body>
+</html>

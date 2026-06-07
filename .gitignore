@@ -1,0 +1,13 @@
+# Runtime / downloaded binaries
+Shared/bin/
+Shared/models/
+Shared/vendor/
+
+# Runtime data
+Shared/chat_data/
+Shared/logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+__pycache__/
