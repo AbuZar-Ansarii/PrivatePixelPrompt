@@ -97,6 +97,24 @@ Use your PC's AI from your phone or tablet on the same network:
 | Slow Generation | The model may be too large for your RAM. Try a smaller model (e.g., Gemma 2 2B). |
 
 ---
+## Privacy Policy
+PortableLM runs 100% offline after initial setup. No data—including chat history, generated images, or voice outputs—ever leaves your machine. No telemetry, no analytics, no cloud dependencies, no hidden phone-home requests.
+
+What we do NOT collect:
+
+Personal information
+
+Usage statistics
+
+AI prompts or responses
+
+Generated content
+
+Hardware or system data
+
+Third-party models: The LLM, image generation, and TTS models you download run locally and do not transmit data externally. Review each model's license individually (e.g., Llama 3, Gemma 2, Stable Diffusion) if you require specific compliance.
+
+#### By using PortableLM, you retain full ownership of all content you generate.
 
 ## License
 
