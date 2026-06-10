@@ -1,4 +1,6 @@
-# PortableLM
+<div align="center"> # .✦ ݁˖ PortableLM (PrivatePixelPrompt).✦ ݁˖
+
+</div>
 
 **PortableLM** is a fully air-gapped, zero-dependency, plug-and-play local AI environment designed to run seamlessly from your **local hard drive** or a **portable USB/SSD**. It bypasses complex installations — natively executing large language models, image generation, and high-quality text-to-speech directly on your hardware with no internet required.
 
