@@ -31,6 +31,7 @@ import re
 import atexit
 import shutil
 import socket
+import secrets
 from collections import defaultdict
 
 # Disable system proxies for internal local connections to avoid 502 errors
@@ -358,7 +359,6 @@ def _persist_settings_file(settings):
         with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(settings, f, ensure_ascii=False, indent=2)
             f.flush()
-            os.fsync(f.fileno())
         os.replace(temp_file, SETTINGS_FILE)
 
 def _save_chats_with_backup(chats):
@@ -375,7 +375,6 @@ def _save_chats_with_backup(chats):
             with open(temp_file, "w", encoding="utf-8") as f:
                 json.dump(chats, f, ensure_ascii=False, indent=2)
                 f.flush()
-                os.fsync(f.fileno())
             os.replace(temp_file, CHATS_FILE)
         except Exception:
             # Restore from backup on failure
@@ -877,13 +876,18 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         if not API_TOKEN:
             return True
         auth_header = self.headers.get("Authorization", "")
-        return auth_header == f"Bearer {API_TOKEN}"
+        expected = f"Bearer {API_TOKEN}"
+        return secrets.compare_digest(auth_header, expected)
 
     def _check_rate_limit(self):
         """Returns (allowed, retry_after_seconds)."""
         client_ip = self.client_address[0] if self.client_address else "unknown"
         now = time.time()
         with RATE_LIMIT_LOCK:
+            # Prune stale entries periodically
+            stale = [ip for ip, e in request_counts.items() if now - e["reset_time"] > RATE_LIMIT_WINDOW]
+            for ip in stale:
+                del request_counts[ip]
             entry = request_counts[client_ip]
             if now - entry["reset_time"] > RATE_LIMIT_WINDOW:
                 entry["count"] = 0
@@ -924,13 +928,18 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     # ── Routing ────────────────────────────────────────────────
+    def _send_json(self, status, data):
+        """Send a JSON response with security and CORS headers."""
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self._send_security_headers()
+        self._cors_headers()
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
     def _require_auth(self):
         if not self._validate_auth():
-            self.send_response(401)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Unauthorized"}).encode())
+            self._send_json(401, {"error": "Unauthorized"})
             return False
         return True
 
@@ -940,6 +949,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(429)
             self.send_header("Retry-After", str(retry_after))
             self.send_header("Content-Type", "application/json")
+            self._send_security_headers()
             self._cors_headers()
             self.end_headers()
             self.wfile.write(json.dumps({"error": "Rate limited. Too many requests."}).encode())
@@ -1039,10 +1049,13 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
 
         # Proxy Ollama API
         elif path.startswith("/ollama/"):
+            if not self._require_auth():
+                return
             self._proxy_ollama("POST")
 
         else:
             self.send_response(404)
+            self._send_security_headers()
             self._cors_headers()
             self.end_headers()
 
@@ -1051,9 +1064,12 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             return
         path = urlparse(self.path).path
         if path.startswith("/ollama/"):
+            if not self._require_auth():
+                return
             self._proxy_ollama("DELETE")
         else:
             self.send_response(404)
+            self._send_security_headers()
             self._cors_headers()
             self.end_headers()
 
@@ -1124,7 +1140,6 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             data = "[]"
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self._send_security_headers()
         self._cors_headers()
         self.end_headers()
         self.wfile.write(data.encode("utf-8"))
@@ -1136,17 +1151,10 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             chats = json.loads(body)
             _save_chats_with_backup(chats)
             _log_event(logging.INFO, "Chats saved successfully", request_context=request_context)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": True}).encode())
+            self._send_json(200, {"ok": True})
         except Exception as e:
             _log_event(logging.ERROR, "Failed to save chats", request_context=request_context, exc_info=True)
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._send_json(500, {"error": str(e)})
 
     def _get_settings(self):
         request_context = self._build_request_context("/api/settings")
@@ -1158,7 +1166,6 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             data = "{}"
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self._send_security_headers()
         self._cors_headers()
         self.end_headers()
         self.wfile.write(data.encode("utf-8"))
@@ -1178,30 +1185,17 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             _persist_settings_file(settings)
             _set_active_log_mode(settings["logMode"])
             _log_event(logging.INFO, "Settings saved successfully", request_context=request_context)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._send_security_headers()
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": True, "logMode": settings["logMode"]}).encode())
+            self._send_json(200, {"ok": True, "logMode": settings["logMode"]})
         except Exception as e:
             _log_event(logging.ERROR, "Failed to save settings", request_context=request_context, exc_info=True)
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._send_json(500, {"error": str(e)})
 
     # ── Hardware Stats ─────────────────────────────────────────
     def _get_stats(self):
         """Return CPU % and RAM % as JSON. Works with no external packages."""
         try:
             cpu, ram = _get_hw_stats()
-            data = json.dumps({"cpu_percent": cpu, "ram_percent": ram, "has_psutil": HAS_PSUTIL})
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(data.encode())
+            self._send_json(200, {"cpu_percent": cpu, "ram_percent": ram, "has_psutil": HAS_PSUTIL})
         except Exception as e:
             _log_event(
                 logging.ERROR,
@@ -1209,44 +1203,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                 request_context=self._build_request_context("/api/stats"),
                 exc_info=True,
             )
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
-
-    def _get_health(self):
-        """Return system health status."""
-        try:
-            ollama_ok = _is_ollama_running()
-            sd_ok = _is_sd_enabled()
-            tts_ok = TTS_ENABLED
-            health = {
-                "status": "healthy" if ollama_ok else "degraded",
-                "timestamp": time.time(),
-                "engines": {
-                    "ollama": ollama_ok,
-                    "stable_diffusion": sd_ok,
-                    "tts": tts_ok,
-                },
-                "version": VERSION,
-            }
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps(health).encode())
-        except Exception as e:
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
-
-    def _get_version(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(json.dumps({"version": VERSION}).encode())
+            self._send_json(500, {"error": str(e)})
 
     # ── Image Generation API ───────────────────────────────────
     def _get_image_models(self):
@@ -1262,13 +1219,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                 "label": "UNCENSORED",
                 "badge": "SD 1.5 - CYBER REALISTIC",
             })
-        data = json.dumps({"models": models, "sd_enabled": sd_ready})
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self._send_security_headers()
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(data.encode())
+        self._send_json(200, {"models": models, "sd_enabled": sd_ready})
 
     def _get_engine_status(self):
         """Return which engines are currently running."""
@@ -1280,7 +1231,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             sd_binary_exists = bool(SD_BINARY and os.path.isfile(SD_BINARY))
             sd_model_exists = bool(SD_MODEL and os.path.isfile(SD_MODEL))
 
-            data = json.dumps({
+            self._send_json(200, {
                 "ollama": ollama_up,
                 "sd_enabled": sd_ready,
                 "sd_binary": sd_binary_exists,
@@ -1293,18 +1244,8 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                 "version": VERSION,
                 "auth_enabled": bool(API_TOKEN),
             })
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._send_security_headers()
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(data.encode())
         except Exception as e:
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._send_json(500, {"error": str(e)})
 
     def _stop_ollama_endpoint(self):
         """Stop the Ollama chat engine to free RAM for image generation."""
@@ -1312,48 +1253,27 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         try:
             _kill_ollama()
             _log_event(logging.INFO, "Ollama engine stopped by user", request_context=request_context)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._send_security_headers()
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": True, "message": "Chat engine stopped."}).encode())
+            self._send_json(200, {"ok": True, "message": "Chat engine stopped."})
         except Exception as e:
             _log_event(logging.ERROR, "Failed to stop Ollama", request_context=request_context, exc_info=True)
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._send_json(500, {"error": str(e)})
 
     def _start_ollama_endpoint(self):
         """Restart the Ollama chat engine."""
         request_context = self._build_request_context("/api/start-ollama")
         try:
             if _is_ollama_running():
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self._send_security_headers()
-                self._cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"ok": True, "message": "Chat engine already running."}).encode())
+                self._send_json(200, {"ok": True, "message": "Chat engine already running."})
                 return
             ok = _start_ollama()
             if ok:
                 _log_event(logging.INFO, "Ollama engine started by user", request_context=request_context)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self._send_security_headers()
-                self._cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"ok": True, "message": "Chat engine started."}).encode())
+                self._send_json(200, {"ok": True, "message": "Chat engine started."})
             else:
                 raise RuntimeError("Ollama failed to start. Check that the engine is installed.")
         except Exception as e:
             _log_event(logging.ERROR, "Failed to start Ollama", request_context=request_context, exc_info=True)
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._send_json(500, {"error": str(e)})
 
     def _generate_image(self):
         """Start an image generation job and return a job_id immediately."""
@@ -1387,33 +1307,27 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         # Validate prompt
         prompt = payload.get("prompt", "").strip()
         if not prompt:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Prompt is required."}).encode())
+            self._send_json(400, {"error": "Prompt is required."})
             return
         if len(prompt) > 2000:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Prompt too long (max 2000 chars)."}).encode())
+            self._send_json(400, {"error": "Prompt too long (max 2000 chars)."})
             return
 
         # Validate numeric parameters
         try:
-            steps = int(payload.get("steps", 20))
-            cfg = float(payload.get("cfg_scale", 7.0))
-            width = int(payload.get("width", 512))
-            height = int(payload.get("height", 512))
+            steps = max(1, min(50, int(payload.get("steps", 20))))
+            cfg = max(1.0, min(15.0, float(payload.get("cfg_scale", 7.0))))
+            width = max(256, min(768, int(payload.get("width", 512))))
+            height = max(256, min(768, int(payload.get("height", 512))))
         except (ValueError, TypeError):
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Invalid numeric parameters."}).encode())
+            self._send_json(400, {"error": "Invalid numeric parameters."})
             return
+
+        # Inject validated params back into payload for _run_sd_generation
+        payload["steps"] = steps
+        payload["cfg_scale"] = cfg
+        payload["width"] = width
+        payload["height"] = height
 
         # Clean up stale jobs occasionally
         _cleanup_old_image_jobs()
@@ -1446,20 +1360,12 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         query = parse_qs(urlparse(self.path).query)
         job_id = query.get("job_id", [None])[0]
         if not job_id:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Missing job_id parameter."}).encode())
+            self._send_json(400, {"error": "Missing job_id parameter."})
             return
 
         job = _get_image_job(job_id)
         if not job:
-            self.send_response(404)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Job not found."}).encode())
+            self._send_json(404, {"error": "Job not found."})
             return
 
         # Build response with progress info
@@ -1478,12 +1384,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         elif job.get("status") == "error":
             resp["error"] = job.get("error", "Unknown error.")
 
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self._send_security_headers()
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(json.dumps(resp).encode())
+        self._send_json(200, resp)
 
     # ── Text to Speech API ─────────────────────────────────────
     def _get_tts_voices(self):
@@ -1494,13 +1395,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                 if f.endswith(".onnx"):
                     name = f.replace(".onnx", "")
                     voices.append({"id": f, "name": name})
-        data = json.dumps({"voices": voices, "tts_enabled": TTS_ENABLED})
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self._send_security_headers()
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(data.encode())
+        self._send_json(200, {"voices": voices, "tts_enabled": TTS_ENABLED})
 
     def _generate_tts(self):
         """Generate speech from text using Piper and return the audio file."""
@@ -1570,10 +1465,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
 
         except Exception as e:
             _log_event(logging.ERROR, "TTS generation failed", request_context=request_context, exc_info=True)
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._send_json(500, {"error": str(e)})
 
     def _get_health(self):
         """Return system health status."""
@@ -1581,7 +1473,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             ollama_ok = _is_ollama_running()
             sd_ok = _is_sd_enabled()
             tts_ok = TTS_ENABLED
-            health = {
+            self._send_json(200, {
                 "status": "healthy" if ollama_ok else "degraded",
                 "timestamp": time.time(),
                 "engines": {
@@ -1590,26 +1482,12 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                     "tts": tts_ok,
                 },
                 "version": VERSION,
-            }
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._send_security_headers()
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps(health).encode())
+            })
         except Exception as e:
-            self.send_response(500)
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode())
+            self._send_json(500, {"status": "error", "error": str(e)})
 
     def _get_version(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self._send_security_headers()
-        self._cors_headers()
-        self.end_headers()
-        self.wfile.write(json.dumps({"version": VERSION}).encode())
+        self._send_json(200, {"version": VERSION})
 
     # ── Ollama Proxy (streaming-aware) ─────────────────────────
     def _proxy_ollama(self, method):
@@ -1820,12 +1698,6 @@ class ThreadedHTTPServer(http.server.HTTPServer):
 HOST_HARDWARE_SPECS = _get_hardware_specs()
 LOGGER, LOG_LISTENER = configure_logging()
 
-def _cleanup_image_jobs_periodic():
-    """Clean old image jobs every 5 minutes."""
-    while True:
-        time.sleep(300)
-        _cleanup_old_image_jobs()
-
 def cleanup_on_exit():
     """Clean up resources on exit."""
     try:
@@ -1852,10 +1724,6 @@ def open_browser_delayed():
 def main():
     ensure_data_dir()
     _set_active_log_mode(_load_settings_file().get("logMode"))
-
-    # Start periodic image job cleanup
-    cleanup_thread = threading.Thread(target=_cleanup_image_jobs_periodic, daemon=True)
-    cleanup_thread.start()
 
     # Try to find the local LAN IP
     local_ip = "127.0.0.1"
