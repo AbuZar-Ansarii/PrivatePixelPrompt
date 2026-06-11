@@ -16,6 +16,9 @@ set "OLLAMA_ORIGINS=*"
 set "OLLAMA_HOST=127.0.0.1:11435"
 set "OLLAMA_LIBRARY_PATH=%~dp0..\Shared\bin\lib\ollama"
 
+:: Pass Ollama host to chat server so proxy knows where to connect
+set "OLLAMA_HOST_URL=http://127.0.0.1:11435"
+
 :: -------------------------------------------------------
 :: Find Python: prefer portable USB copy, then system
 :: -------------------------------------------------------
@@ -133,6 +136,12 @@ echo ===================================================
 echo.
 
 %PYTHON_CMD% "%~dp0..\Shared\chat_server.py"
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Chat server exited with code %errorlevel%.
+    echo.
+    pause
+)
 
 echo Shutting down...
 taskkill /f /im ollama-windows.exe >nul 2>&1

@@ -24,6 +24,8 @@ export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME/runners"
 export OLLAMA_TMPDIR="$OLLAMA_RUNTIME/tmp"
 export OLLAMA_ORIGINS="*"
 export OLLAMA_HOST="127.0.0.1:11434"
+# Also export for chat_server.py so the Ollama proxy knows the correct host
+export OLLAMA_HOST_URL="http://127.0.0.1:11434"
 mkdir -p "$OLLAMA_RUNTIME/runners" "$OLLAMA_RUNTIME/tmp"
 # -------------------------------------------------------
 

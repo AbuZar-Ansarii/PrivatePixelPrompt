@@ -86,7 +86,12 @@ except ImportError:
 
 # ── Configuration ──────────────────────────────────────────────
 CHAT_SERVER_PORT = int(os.environ.get("CHAT_SERVER_PORT", 3333))
-OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+# Allow OLLAMA_HOST_URL as an explicit override (used by platform launchers)
+# Fallback to OLLAMA_HOST, then default
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST_URL") or os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+# Normalise: ensure it has a scheme
+if OLLAMA_HOST and not OLLAMA_HOST.startswith("http"):
+    OLLAMA_HOST = "http://" + OLLAMA_HOST
 LLAMA_CPP_MODE = "--llama-cpp" in sys.argv or os.environ.get("LLAMA_CPP_MODE") == "1"
 if LLAMA_CPP_MODE:
     OLLAMA_HOST = os.environ.get("LLAMA_CPP_HOST", "http://127.0.0.1:8080")
@@ -510,7 +515,9 @@ def _start_ollama():
         env = os.environ.copy()
         env["OLLAMA_MODELS"] = os.path.join(SCRIPT_DIR, "models", "ollama_data")
         env["OLLAMA_ORIGINS"] = "*"
-        env["OLLAMA_HOST"] = "127.0.0.1:11434"
+        # Use the same host the proxy expects (respects env override)
+        parsed = urllib.parse.urlparse(OLLAMA_HOST)
+        env["OLLAMA_HOST"] = f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 11434}"
         env["OLLAMA_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, "bin", "lib", "ollama")
         subprocess.Popen([OLLAMA_BIN, "serve"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # Wait for it to be ready
