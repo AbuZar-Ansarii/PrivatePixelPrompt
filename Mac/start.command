@@ -41,6 +41,19 @@ if [ ! -f "$SHARED_DIR/bin/ollama-darwin" ]; then
     exit 1
 fi
 
+# Check and remove macOS Gatekeeper quarantine if present
+if command -v xattr &>/dev/null; then
+    if xattr -p com.apple.quarantine "$SHARED_DIR/bin/ollama-darwin" 2>/dev/null | grep -q "0081"; then
+        echo ""
+        echo "[!] Removing macOS quarantine flag from Ollama binary..."
+        xattr -d com.apple.quarantine "$SHARED_DIR/bin/ollama-darwin" 2>/dev/null || {
+            echo "[!] Could not auto-remove quarantine. You may need to run:"
+            echo "    xattr -d com.apple.quarantine '$SHARED_DIR/bin/ollama-darwin'"
+            echo ""
+        }
+    fi
+fi
+
 # Check if Ollama is already running
 if curl -s http://127.0.0.1:11434/api/tags > /dev/null 2>&1; then
     echo "[OK] Ollama engine is already running!"

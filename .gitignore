@@ -6,8 +6,30 @@ Shared/vendor/
 # Runtime data
 Shared/chat_data/
 Shared/logs/
+Shared/.ollama-runtime/
 
 # OS files
 .DS_Store
 Thumbs.db
 __pycache__/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+*.py[cod]
+.env
+*.egg-info/
+
+# Model files (large binaries)
+*.safetensors
+*.gguf
+*.bin
+*.onnx
+
+# Backup files
+*.bak

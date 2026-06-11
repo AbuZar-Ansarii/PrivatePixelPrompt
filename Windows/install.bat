@@ -1,4 +1,6 @@
 @echo off
+setlocal enabledelayedexpansion
+
 title Portable AI - Setup
 color 0E
 
@@ -16,10 +18,31 @@ echo   - Minimum USB space: 8 GB (16 GB recommended)
 echo.
 echo  Make sure you have a good internet connection!
 echo.
-pause
 
-:: Run the PowerShell setup script from the same folder as this bat file
+REM Check if PowerShell script exists
+if not exist "%~dp0install-core.ps1" (
+    echo.
+    echo ===================================================
+    echo     ERROR: install-core.ps1 not found
+    echo ===================================================
+    echo.
+    pause
+    exit /b 1
+)
+
+REM Run the PowerShell setup script from the same folder as this bat file
 powershell -ExecutionPolicy Bypass -File "%~dp0install-core.ps1"
+if %errorlevel% neq 0 (
+    echo.
+    echo ===================================================
+    echo     SETUP FAILED
+    echo ===================================================
+    echo.
+    echo Check the error messages above.
+    echo.
+    pause
+    exit /b 1
+)
 
 echo.
 echo ===================================================
