@@ -42,16 +42,53 @@ if [ ! -f "$SHARED_DIR/bin/ollama-darwin" ]; then
 fi
 
 # Check if Ollama is already running
-if curl -s http://127.0.0.1:11435/api/tags > /dev/null 2>&1; then
+if curl -s http://127.0.0.1:11434/api/tags > /dev/null 2>&1; then
     echo "[OK] Ollama engine is already running!"
 else
     echo "Starting offline Mac AI Engine..."
     HOME="$OLLAMA_RUNTIME" "$SHARED_DIR/bin/ollama-darwin" serve &
     OLLAMA_PID=$!
-    
+
+    # Check if the process actually started
+    if ! kill -0 $OLLAMA_PID 2>/dev/null; then
+        echo "==================================================="
+        echo "  ERROR: Failed to start Ollama engine!"
+        echo "==================================================="
+        echo ""
+        echo "  Possible causes:"
+        echo "  - The binary may not be executable (try: chmod +x Shared/bin/ollama-darwin)"
+        echo "  - The binary may be quarantined (try: xattr -d com.apple.quarantine Shared/bin/ollama-darwin)"
+        echo "  - Your Mac architecture may not be supported"
+        echo ""
+        read -n 1 -s -r -p "Press any key to continue..."
+        exit 1
+    fi
+
     echo "Waiting for engine to initialize..."
-    until curl -s http://127.0.0.1:11435/api/tags > /dev/null 2>&1; do
+    WAIT_COUNT=0
+    MAX_WAIT=30
+    until curl -s http://127.0.0.1:11434/api/tags > /dev/null 2>&1; do
         sleep 1
+        WAIT_COUNT=$((WAIT_COUNT + 1))
+        if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
+            echo "==================================================="
+            echo "  ERROR: Engine did not start within ${MAX_WAIT} seconds!"
+            echo "==================================================="
+            echo ""
+            echo "  Process ID: $OLLAMA_PID"
+            echo ""
+            if kill -0 $OLLAMA_PID 2>/dev/null; then
+                echo "  Process is still running but not responding."
+                echo "  Check for errors by running in terminal:"
+                echo "    cd '$SHARED_DIR'"
+                echo "    HOME=.ollama-runtime ./bin/ollama-darwin serve"
+            else
+                echo "  Process has exited unexpectedly."
+            fi
+            echo ""
+            read -n 1 -s -r -p "Press any key to continue..."
+            exit 1
+        fi
     done
     echo "[OK] Engine is online!"
 fi
@@ -76,6 +113,7 @@ fi
 
 # Cleanup
 if [ -n "$OLLAMA_PID" ]; then
-    kill -9 $OLLAMA_PID 2>/dev/null
+    kill $OLLAMA_PID 2>/dev/null
+    wait $OLLAMA_PID 2>/dev/null
 fi
 echo "Goodbye!"

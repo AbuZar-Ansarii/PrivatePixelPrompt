@@ -81,7 +81,7 @@ except ImportError:
 
 # ── Configuration ──────────────────────────────────────────────
 CHAT_SERVER_PORT = 3333
-OLLAMA_HOST = "http://127.0.0.1:11435"
+OLLAMA_HOST = "http://127.0.0.1:11434"
 LLAMA_CPP_MODE = "--llama-cpp" in sys.argv
 if LLAMA_CPP_MODE:
     OLLAMA_HOST = "http://127.0.0.1:8080"
@@ -461,7 +461,7 @@ def _start_ollama():
         env = os.environ.copy()
         env["OLLAMA_MODELS"] = os.path.join(SCRIPT_DIR, "models", "ollama_data")
         env["OLLAMA_ORIGINS"] = "*"
-        env["OLLAMA_HOST"] = "127.0.0.1:11435"
+        env["OLLAMA_HOST"] = "127.0.0.1:11434"
         env["OLLAMA_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, "bin", "lib", "ollama")
         subprocess.Popen([OLLAMA_BIN, "serve"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # Wait for it to be ready

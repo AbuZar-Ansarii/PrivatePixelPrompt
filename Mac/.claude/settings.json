@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/jphermans/Downloads/PrivatePixelPrompt-main/Shared/models/**)",
+      "Bash(HOME=../.ollama-runtime OLLAMA_MODELS=ollama_data ../bin/ollama-darwin create gemma2-2b-local -f Modelfile-gemma2-2b-local)",
+      "Read(//Users/jphermans/Downloads/PrivatePixelPrompt-main/**)",
+      "Bash(gh pr create --repo AbuZar-Ansarii/PrivatePixelPrompt --head jphermans:fix/mac-port-and-engine-issues --base main --title 'Fix Mac port inconsistency and model import issues' --body ' *)",
+      "Bash(sed -i '' 's/127\\\\.0\\\\.0\\\\.1:11435/127.0.0.1:11434/g' /Users/jphermans/Downloads/PrivatePixelPrompt-main/Shared/chat_server.py && grep -n \"1143[45]\" /Users/jphermans/Downloads/PrivatePixelPrompt-main/Shared/chat_server.py 2>/dev/null)"
+    ],
+    "additionalDirectories": [
+      "/Users/jphermans/Downloads/PrivatePixelPrompt-main/Shared"
+    ]
+  }
+}
