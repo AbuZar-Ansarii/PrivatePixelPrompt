@@ -2655,7 +2655,8 @@
       // ÔöÇÔöÇ Config ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
       const IS_SERVED =
         location.protocol === 'http:' || location.protocol === 'https:';
-      const OLLAMA = IS_SERVED ? '/ollama' : 'http://127.0.0.1:11435';
+      const OLLAMA = IS_SERVED ? '/ollama' : 'http://127.0.0.1:11434';
+      const API_TOKEN = localStorage.getItem('api_token') || '';
       const VISION_MODELS = [
         'llava',
         'moondream',
@@ -2809,15 +2810,26 @@
           const r = await fetch('/api/stats');
           if (!r.ok) return;
           const d = await r.json();
-          if (d.ram_percent === -1) return;
-          setBar('cpu', d.cpu_percent);
-          setBar('ram', d.ram_percent);
+          if (d.cpu_percent === -1 || d.ram_percent === -1) {
+            setBar('cpu', 0, true);
+            setBar('ram', 0, true);
+            return;
+          }
+          setBar('cpu', d.cpu_percent, false);
+          setBar('ram', d.ram_percent, false);
         } catch {}
       }
-      function setBar(type, pct) {
+      function setBar(type, pct, isNA) {
         const bar = $(`#${type}-bar`);
         const lbl = $(`#${type}-pct`);
         if (!bar) return;
+        if (isNA) {
+          bar.style.transform = 'scaleX(0)';
+          lbl.textContent = 'N/A';
+          lbl.className = 'hw-pct';
+          lbl.title = 'Hardware stats unavailable. Install psutil for macOS support.';
+          return;
+        }
         bar.style.transform = `scaleX(${Math.max(0, Math.min(100, pct)) / 100})`;
         lbl.textContent = pct + '%';
         lbl.className =
@@ -2848,7 +2860,7 @@
         try {
           await fetch('/api/settings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({
               globalSystemPrompt: S.globalSys,
               logMode: S.logMode,
@@ -2870,7 +2882,7 @@
         try {
           await fetch('/api/settings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({
               globalSystemPrompt: '',
               logMode: S.logMode,
@@ -2890,7 +2902,7 @@
         try {
           await fetch('/api/settings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify({ logMode: S.logMode }),
           });
         } catch { }
@@ -3178,7 +3190,7 @@
         try {
           const startR = await fetch('/api/generate-image', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify(payload),
           });
           const startD = await startR.json();
@@ -3254,7 +3266,7 @@
         D.imgStopOllama.disabled = true;
         D.chatEngineStatus.textContent = 'Stopping...';
         try {
-          await fetch('/api/stop-ollama', { method: 'POST' });
+          await fetch('/api/stop-ollama', { method: 'POST', headers: authHeaders() });
           const stopped = await waitForEngineState(false);
           toast(stopped ? 'Chat engine unloaded.' : 'Chat engine stop timed out — may still be running.');
         } catch {
@@ -3268,7 +3280,7 @@
         D.imgStartOllama.disabled = true;
         D.chatEngineStatus.textContent = 'Starting...';
         try {
-          await fetch('/api/start-ollama', { method: 'POST' });
+          await fetch('/api/start-ollama', { method: 'POST', headers: authHeaders() });
           const started = await waitForEngineState(true);
           toast(started ? 'Chat engine loaded.' : 'Chat engine start timed out.');
         } catch {
@@ -3982,6 +3994,7 @@
         try {
           const r = await fetch('/api/generate-tts', {
             method: 'POST',
+            headers: authHeaders(),
             body: JSON.stringify({ text, voice }),
           });
 
@@ -4029,12 +4042,18 @@
         }
       }
 
+      function authHeaders() {
+        const h = { 'Content-Type': 'application/json' };
+        if (API_TOKEN) h['Authorization'] = 'Bearer ' + API_TOKEN;
+        return h;
+      }
+
       function save() {
         localStorage.setItem('g-convs', JSON.stringify(S.convs));
         if (IS_SERVED) {
           fetch('/api/chats', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify(S.convs),
           });
         }
