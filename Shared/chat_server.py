@@ -33,7 +33,7 @@ import re
 os.environ["no_proxy"] = "127.0.0.1,localhost,0.0.0.0"
 os.environ["NO_PROXY"] = "127.0.0.1,localhost,0.0.0.0"
 from datetime import datetime
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote, unquote
 
 # ── Image Generation Job Tracking ──────────────────────────────
 IMAGE_JOBS = {}
@@ -656,16 +656,35 @@ def _run_sd_generation(job_id, payload, output_path):
             img_bytes = f.read()
         img_b64 = base64.b64encode(img_bytes).decode("utf-8")
 
-        # Clean up temp file
+        # Save metadata sidecar in chat_data/generated_images/
+        meta_path = output_path + ".json"
+        filename = os.path.basename(output_path)
         try:
-            os.remove(output_path)
-        except Exception:
-            pass
+            meta_data = {
+                "id": os.path.splitext(filename)[0],
+                "filename": filename,
+                "url": f"/chat_data/generated_images/{quote(filename)}",
+                "prompt": prompt,
+                "negative_prompt": negative,
+                "steps": steps,
+                "cfg_scale": cfg,
+                "width": width,
+                "height": height,
+                "seed": seed,
+                "sampling_method": sampling,
+                "created_at": datetime.now().isoformat(),
+                "timestamp": time.time(),
+            }
+            with open(meta_path, "w", encoding="utf-8") as mf:
+                json.dump(meta_data, mf, indent=2)
+        except Exception as e:
+            print(f"[SD] WARN: Could not write metadata sidecar: {e}")
 
         _update_image_job(
             job_id,
             status="done",
             image_b64=img_b64,
+            image_url=f"/chat_data/generated_images/{quote(filename)}",
             elapsed_ms=int((time.time() - IMAGE_JOBS[job_id]["started_at"]) * 1000),
         )
     except Exception as e:
@@ -880,6 +899,10 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/image-progress":
             self._get_image_progress()
 
+        # Generated images library API
+        elif path == "/api/generated-images":
+            self._get_generated_images()
+
         # Proxy Ollama API
         elif path.startswith("/ollama/"):
             self._proxy_ollama("GET")
@@ -900,6 +923,10 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         # Image generation API
         elif path == "/api/generate-image":
             self._generate_image()
+
+        # Delete generated image API
+        elif path == "/api/delete-generated-image":
+            self._delete_generated_image()
 
         # TTS generation API
         elif path == "/api/generate-tts":
@@ -947,7 +974,8 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
 
     def _serve_static(self, path):
         """Serve static files (CSS, JS, images) from SCRIPT_DIR."""
-        safe_path = os.path.normpath(path.lstrip("/"))
+        raw_path = unquote(path)
+        safe_path = os.path.normpath(raw_path.lstrip("/"))
         full_path = os.path.join(SCRIPT_DIR, safe_path)
 
         # Security: don't allow path traversal
@@ -961,7 +989,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             mime_types = {
                 ".html": "text/html", ".css": "text/css", ".js": "application/javascript",
                 ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
-                ".svg": "image/svg+xml", ".ico": "image/x-icon"
+                ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon"
             }
             content_type = mime_types.get(ext, "application/octet-stream")
             with open(full_path, "rb") as f:
@@ -1277,6 +1305,74 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         self._cors_headers()
         self.end_headers()
         self.wfile.write(json.dumps(resp).encode())
+
+    def _get_generated_images(self):
+        """Return list of saved generated images with metadata from chat_data/generated_images/."""
+        images_dir = os.path.join(SCRIPT_DIR, "chat_data", "generated_images")
+        os.makedirs(images_dir, exist_ok=True)
+        items = []
+        valid_exts = {".png", ".jpg", ".jpeg", ".webp"}
+        try:
+            for fname in os.listdir(images_dir):
+                ext = os.path.splitext(fname)[1].lower()
+                if ext in valid_exts:
+                    img_path = os.path.join(images_dir, fname)
+                    meta_path = img_path + ".json"
+                    meta = None
+                    if os.path.isfile(meta_path):
+                        try:
+                            with open(meta_path, "r", encoding="utf-8") as mf:
+                                meta = json.load(mf)
+                        except Exception:
+                            meta = None
+                    if not meta:
+                        mtime = os.path.getmtime(img_path)
+                        meta = {
+                            "id": os.path.splitext(fname)[0],
+                            "filename": fname,
+                            "url": f"/chat_data/generated_images/{quote(fname)}",
+                            "prompt": os.path.splitext(fname)[0],
+                            "timestamp": mtime,
+                            "created_at": datetime.fromtimestamp(mtime).isoformat(),
+                        }
+                    else:
+                        meta["url"] = f"/chat_data/generated_images/{quote(fname)}"
+                    items.append(meta)
+            items.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+        except Exception as e:
+            items = []
+        data = json.dumps({"images": items})
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self._cors_headers()
+        self.end_headers()
+        self.wfile.write(data.encode())
+
+    def _delete_generated_image(self):
+        """Delete a generated image and its metadata sidecar from chat_data/generated_images/."""
+        body = self._read_body()
+        try:
+            payload = json.loads(body) if body else {}
+            raw_fname = payload.get("filename", "")
+            filename = unquote(os.path.basename(raw_fname))
+            if filename:
+                images_dir = os.path.join(SCRIPT_DIR, "chat_data", "generated_images")
+                img_path = os.path.join(images_dir, filename)
+                meta_path = img_path + ".json"
+                if os.path.isfile(img_path):
+                    os.remove(img_path)
+                if os.path.isfile(meta_path):
+                    os.remove(meta_path)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
 
     # ── Text to Speech API ─────────────────────────────────────
     def _get_tts_voices(self):
