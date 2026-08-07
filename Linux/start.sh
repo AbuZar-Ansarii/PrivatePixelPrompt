@@ -24,6 +24,9 @@ export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME/runners"
 export OLLAMA_TMPDIR="$OLLAMA_RUNTIME/tmp"
 export OLLAMA_ORIGINS="*"
 export OLLAMA_HOST="127.0.0.1:11435"
+export OLLAMA_VULKAN=1
+export OLLAMA_IGPU_ENABLE=1
+export HSA_OVERRIDE_GFX_VERSION=10.3.0
 mkdir -p "$OLLAMA_RUNTIME/runners" "$OLLAMA_RUNTIME/tmp"
 # -------------------------------------------------------
 
