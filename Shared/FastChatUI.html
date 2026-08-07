@@ -3624,10 +3624,10 @@
                 </div>
                 <div class="audio-card-text">${textEsc}</div>
                 <audio class="audio-card-player" controls src="${esc(aud.url)}"></audio>
-                <div class="audio-card-actions">
+                <div class="gallery-actions" style="margin-top:4px; padding-top:8px; border-top:1px solid var(--bd2);">
                   <button class="gallery-btn" onclick='reuseAudioText(${rawTextJson})'><i class="fa-solid fa-arrow-rotate-left"></i> Reuse Text</button>
                   <a class="gallery-btn" href="${esc(aud.url)}" download="${esc(aud.filename)}" style="text-decoration:none;"><i class="fa-solid fa-download"></i> Download</a>
-                  <button class="gallery-btn del" onclick="deleteAudioItem('${esc(aud.filename)}')"><i class="fa-solid fa-trash"></i></button>
+                  <button class="gallery-btn del" onclick="deleteAudioItem('${esc(aud.filename)}')"><i class="fa-solid fa-trash"></i> Delete</button>
                 </div>
               </div>`;
           })
