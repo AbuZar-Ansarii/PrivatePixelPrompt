@@ -88,14 +88,14 @@ fi
 cd llama.cpp
 if [ ! -f "build/bin/llama-server" ]; then
     echo -e "${MAG}      Compiling engine natively for your processor...${RST}"
-    echo -e "${MAG}      (This takes 10 to 30 minutes! Do not close Termux)${RST}"
+    echo -e "${MAG}      (This takes 2 to 5 minutes! Do not close Termux)${RST}"
     
     # Acquire wakelock so Android doesn't kill compilation
     termux-wake-lock 2>/dev/null || true
     
     rm -rf build 2>/dev/null
-    cmake -B build -GNinja -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF
-    cmake --build build --config Release --target llama-server
+    cmake -B build -GNinja -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_TESTS=OFF -DGGML_NATIVE=ON
+    cmake --build build --config Release --target llama-server -- -j$(nproc)
     
     termux-wake-unlock 2>/dev/null || true
     echo -e "${GRN}      Compilation complete!${RST}"

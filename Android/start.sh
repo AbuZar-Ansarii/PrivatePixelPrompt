@@ -32,8 +32,13 @@ if [ ! -f "$SHARED_BIN/llama-server-android" ]; then
     exit 1
 fi
 
-# Find the first .gguf file to load automatically
-MODEL_FILE=$(ls "$MODELS_DIR"/*.gguf 2>/dev/null | head -n 1)
+# Prioritize lightweight LFM2.5 230M if present, otherwise auto-select first .gguf
+MODEL_FILE=""
+if [ -f "$MODELS_DIR/LFM2.5-230M.Q4_K_M.gguf" ]; then
+    MODEL_FILE="$MODELS_DIR/LFM2.5-230M.Q4_K_M.gguf"
+else
+    MODEL_FILE=$(ls "$MODELS_DIR"/*.gguf 2>/dev/null | head -n 1)
+fi
 
 if [ -z "$MODEL_FILE" ]; then
     echo "ERROR: No .gguf models found in Shared/models/!"
@@ -54,8 +59,9 @@ if curl -s http://127.0.0.1:8080/v1/models > /dev/null 2>&1; then
 else
     echo "Starting offline Android AI Engine (Llama-Server)..."
     
-    # Run llama-server natively. -c 2048 limits context to fit in mobile RAM
-    "$SHARED_BIN/llama-server-android" -m "$MODEL_FILE" -c 2048 -cb -np 4 --port 8080 > "$SHARED_DIR/llama-server.log" 2>&1 &
+    # Run llama-server natively with all CPU threads (-t) for high mobile performance
+    THREADS=$(nproc 2>/dev/null || echo 4)
+    "$SHARED_BIN/llama-server-android" -m "$MODEL_FILE" -c 2048 -cb -np 4 -t "$THREADS" --port 8080 > "$SHARED_DIR/llama-server.log" 2>&1 &
     LLAMA_PID=$!
     
     echo "Loading AI into memory (can take up to 20 seconds)..."
