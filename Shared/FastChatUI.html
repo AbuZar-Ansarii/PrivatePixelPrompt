@@ -2739,6 +2739,15 @@
               </div>
 
               <div class="img-grid">
+                <div class="img-row" style="grid-column: 1 / -1;">
+                  <label>Aspect Ratio</label>
+                  <select id="img-aspect" class="sys-select" style="width:100%; height:40px; padding:0 12px;">
+                    <option value="1:1" selected>1:1 (Square - 512 × 512)</option>
+                    <option value="16:9">16:9 (Landscape - 768 × 432)</option>
+                    <option value="9:16">9:16 (Portrait - 432 × 768)</option>
+                    <option value="custom">Custom (Select Width & Height)</option>
+                  </select>
+                </div>
                 <div class="img-row">
                   <label>Steps</label>
                   <input type="number" id="img-steps" value="20" min="1" max="50" />
@@ -2753,6 +2762,7 @@
                     <option value="256">256</option>
                     <option value="320">320</option>
                     <option value="384">384</option>
+                    <option value="432">432</option>
                     <option value="448">448</option>
                     <option value="512" selected>512</option>
                     <option value="576">576</option>
@@ -2766,6 +2776,7 @@
                     <option value="256">256</option>
                     <option value="320">320</option>
                     <option value="384">384</option>
+                    <option value="432">432</option>
                     <option value="448">448</option>
                     <option value="512" selected>512</option>
                     <option value="576">576</option>
@@ -2998,6 +3009,7 @@
         imgPanel: document.getElementById('img-panel'),
         imgPrompt: document.getElementById('img-prompt'),
         imgNeg: document.getElementById('img-neg'),
+        imgAspect: document.getElementById('img-aspect'),
         imgSteps: document.getElementById('img-steps'),
         imgCfg: document.getElementById('img-cfg'),
         imgWidth: document.getElementById('img-width'),
@@ -3096,9 +3108,43 @@
         if (ttsSubtabGallery) ttsSubtabGallery.addEventListener('click', () => switchTtsSubTab('gallery'));
         if (refreshAudioGalleryBtn) refreshAudioGalleryBtn.addEventListener('click', () => fetchGeneratedAudio());
 
+        if (D.imgAspect) {
+          D.imgAspect.addEventListener('change', () => {
+            const val = D.imgAspect.value;
+            if (val === '16:9') {
+              D.imgWidth.value = '768';
+              D.imgHeight.value = '432';
+            } else if (val === '9:16') {
+              D.imgWidth.value = '432';
+              D.imgHeight.value = '768';
+            } else if (val === '1:1') {
+              D.imgWidth.value = '512';
+              D.imgHeight.value = '512';
+            }
+          });
+        }
+
+        if (D.imgWidth) D.imgWidth.addEventListener('change', syncAspectFromWidthHeight);
+        if (D.imgHeight) D.imgHeight.addEventListener('change', syncAspectFromWidthHeight);
+
         pollHW();
         setInterval(pollHW, 5000);
         setInterval(fetchModels, 15000);
+      }
+
+      function syncAspectFromWidthHeight() {
+        if (!D.imgAspect || !D.imgWidth || !D.imgHeight) return;
+        const w = D.imgWidth.value;
+        const h = D.imgHeight.value;
+        if (w === '768' && h === '432') {
+          D.imgAspect.value = '16:9';
+        } else if (w === '432' && h === '768') {
+          D.imgAspect.value = '9:16';
+        } else if (w === '512' && h === '512') {
+          D.imgAspect.value = '1:1';
+        } else {
+          D.imgAspect.value = 'custom';
+        }
       }
 
       // ÔöÇÔöÇ Hardware Stats ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
@@ -3543,6 +3589,7 @@
         if (img.cfg_scale) D.imgCfg.value = img.cfg_scale;
         if (img.width) D.imgWidth.value = img.width;
         if (img.height) D.imgHeight.value = img.height;
+        syncAspectFromWidthHeight();
         if (img.seed !== undefined) D.imgSeed.value = img.seed;
         if (img.sampling_method) D.imgSampler.value = img.sampling_method;
 
