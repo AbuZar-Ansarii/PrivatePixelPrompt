@@ -3453,23 +3453,31 @@
         const total = data.total_steps || 0;
         const elapsed = data.elapsed_ms || 0;
         const eta = data.eta_ms;
+        const status = data.status || 'starting';
+
+        D.imgTimeText.textContent = fmtMs(elapsed);
+
+        if (status === 'starting' || status === 'loading_model' || (step === 0 && total > 0)) {
+          D.imgBarFill.style.width = '5%';
+          D.imgStepText.textContent = status === 'loading_model' ? 'Loading model into RAM...' : 'Initializing SD Engine...';
+          D.imgEtaText.textContent = 'Preparing model...';
+          return;
+        }
 
         if (total > 0) {
           const pct = Math.min(100, Math.round((step / total) * 100));
           D.imgBarFill.style.width = `${pct}%`;
-          D.imgStepText.textContent = `Step ${step} / ${total}`;
+          D.imgStepText.textContent = `Step ${step} / ${total} (${pct}%)`;
         } else {
-          D.imgStepText.textContent = 'Working...';
+          D.imgStepText.textContent = 'Generating...';
         }
-
-        D.imgTimeText.textContent = fmtMs(elapsed);
 
         if (eta && eta > 0 && step > 0 && step < total) {
           D.imgEtaText.textContent = `ETA: ${fmtMs(eta)} remaining`;
         } else if (step >= total && total > 0) {
           D.imgEtaText.textContent = 'Finishing up...';
         } else {
-          D.imgEtaText.textContent = 'Calculating ETA...';
+          D.imgEtaText.textContent = 'Sampling steps...';
         }
       }
 

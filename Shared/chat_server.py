@@ -474,76 +474,76 @@ def _start_ollama():
         return False
 
 def _parse_sd_output(pipe, job_id, total_steps):
-    """Read sd stdout+stderr in real-time using non-blocking os.read and handling both \r and \n line endings.
+    """Read sd stdout+stderr in real-time byte-by-byte.
     stable-diffusion.cpp prints sampling progress using: |=====> | 1/20 - 2.50s/it \r"""
     ratio_pattern = re.compile(r"\b(\d+)\s*/\s*(\d+)\b")
+    loading_pattern = re.compile(r"loading|load|model\.cpp|safetensors", re.IGNORECASE)
 
     last_step = 0
     step_start_time = None
     step_times = []
     buffer = ""
+    target_substr = f"/{total_steps}"
 
     try:
-        fd = pipe.fileno()
         while True:
-            try:
-                raw_bytes = os.read(fd, 1024)
-            except (OSError, ValueError):
+            chunk = pipe.read(1)
+            if not chunk:
                 break
-            if not raw_bytes:
-                break
-                
-            buffer += raw_bytes.decode("utf-8", errors="ignore")
             
-            # Split on carriage return \r and newline \n
-            parts = re.split(r"[\r\n]+", buffer)
-            buffer = parts.pop()  # keep remaining un-terminated string in buffer
+            ch_str = chunk.decode("utf-8", errors="ignore")
+            buffer += ch_str
 
-            for line in parts:
-                line = line.strip()
-                if not line:
-                    continue
+            is_line_end = (ch_str == '\r' or ch_str == '\n')
+            has_target = (target_substr in buffer)
 
-                current_step = 0
-                matched_total = total_steps
+            if is_line_end or has_target:
+                if last_step == 0 and loading_pattern.search(buffer):
+                    job = _get_image_job(job_id)
+                    elapsed = time.time() - job.get("started_at", time.time())
+                    _update_image_job(
+                        job_id,
+                        status="loading_model",
+                        elapsed_ms=int(elapsed * 1000),
+                    )
 
-                # Match any "X/Y" where Y equals total_steps (e.g. 1/20, 2/20)
-                for m in ratio_pattern.finditer(line):
+                for m in ratio_pattern.finditer(buffer):
                     try:
                         s_val = int(m.group(1))
                         t_val = int(m.group(2))
-                        if 0 < s_val <= t_val and t_val == total_steps:
-                            current_step = s_val
-                            matched_total = t_val
+                        if 0 < s_val <= t_val and t_val == total_steps and s_val > last_step:
+                            now = time.time()
+                            if step_start_time is not None:
+                                for _ in range(s_val - last_step):
+                                    step_times.append(now - step_start_time)
+                                    if len(step_times) > 10:
+                                        step_times.pop(0)
+                            step_start_time = now
+                            last_step = s_val
+
+                            job = _get_image_job(job_id)
+                            elapsed = now - job.get("started_at", now)
+                            eta_ms = None
+                            if s_val < total_steps and step_times:
+                                avg_step = sum(step_times) / len(step_times)
+                                eta_ms = int(avg_step * (total_steps - s_val) * 1000)
+
+                            _update_image_job(
+                                job_id,
+                                status="generating",
+                                step=s_val,
+                                total_steps=total_steps,
+                                elapsed_ms=int(elapsed * 1000),
+                                eta_ms=eta_ms,
+                            )
                             break
                     except Exception:
                         pass
 
-                if current_step > 0 and current_step != last_step:
-                    now = time.time()
-                    if step_start_time is not None and current_step > last_step:
-                        for _ in range(current_step - last_step):
-                            step_times.append(now - step_start_time)
-                            if len(step_times) > 10:
-                                step_times.pop(0)
-                    step_start_time = now
-                    last_step = current_step
-
-                    job = _get_image_job(job_id)
-                    elapsed = now - job.get("started_at", now)
-                    eta_ms = None
-                    if current_step < matched_total and step_times:
-                        avg_step = sum(step_times) / len(step_times)
-                        eta_ms = int(avg_step * (matched_total - current_step) * 1000)
-
-                    _update_image_job(
-                        job_id,
-                        status="generating",
-                        step=current_step,
-                        total_steps=matched_total,
-                        elapsed_ms=int(elapsed * 1000),
-                        eta_ms=eta_ms,
-                    )
+                if is_line_end:
+                    buffer = ""
+                elif len(buffer) > 256:
+                    buffer = buffer[-128:]
     except Exception as e:
         print(f"[SD] Progress parser info: {e}")
     finally:
@@ -623,13 +623,13 @@ def _run_sd_generation(job_id, payload, output_path):
         if not os.path.isfile(SD_MODEL):
             raise FileNotFoundError(f"Model file not found: {SD_MODEL}")
 
-        # Start process
+        # Start process with unbuffered output (bufsize=0)
         proc = subprocess.Popen(
             cmd, 
             stdout=subprocess.PIPE, 
             stderr=subprocess.STDOUT,
             cwd=SCRIPT_DIR,
-            bufsize=1
+            bufsize=0
         )
         print(f"     Process started (PID: {proc.pid})")
         
