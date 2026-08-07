@@ -678,6 +678,10 @@
         background: linear-gradient(90deg, #8b5cf6, #ec4899);
         box-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
       }
+      .hw-mini-bar.gpu {
+        background: linear-gradient(90deg, #10b981, #06b6d4);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+      }
       .hw-pct {
         min-width: 32px;
         font-size: 11.5px;
@@ -2475,6 +2479,13 @@
               </div>
               <span class="hw-pct" id="ram-pct">--%</span>
             </div>
+            <div class="hw-stat" id="gpu-stat-box" title="Detected GPU">
+              <span style="color: var(--t3); font-size: 10px">GPU</span>
+              <div class="hw-mini-track">
+                <div class="hw-mini-bar gpu" id="gpu-bar"></div>
+              </div>
+              <span class="hw-pct" id="gpu-pct">--%</span>
+            </div>
           </div>
 
           <button
@@ -3157,6 +3168,14 @@
           if (d.ram_percent === -1) return;
           setBar('cpu', d.cpu_percent);
           setBar('ram', d.ram_percent);
+          if (d.gpu_percent !== undefined) {
+            setBar('gpu', d.gpu_percent);
+          }
+          const box = $('#gpu-stat-box');
+          if (box && d.gpu_accel) {
+            const names = d.gpus && d.gpus.length ? d.gpus.join(', ') : 'GPU';
+            box.title = names + ' (' + d.gpu_accel + ')';
+          }
         } catch {}
       }
       function setBar(type, pct) {

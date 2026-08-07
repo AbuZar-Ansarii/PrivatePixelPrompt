@@ -16,6 +16,14 @@ set "OLLAMA_ORIGINS=*"
 set "OLLAMA_HOST=127.0.0.1:11435"
 set "OLLAMA_LIBRARY_PATH=%~dp0..\Shared\bin\lib\ollama"
 
+:: Enable GPU Hardware Acceleration (AMD Radeon / Vulkan / ROCm / NVIDIA / Intel)
+set "OLLAMA_VULKAN=1"
+set "OLLAMA_IGPU_ENABLE=1"
+set "HSA_OVERRIDE_GFX_VERSION=10.3.0"
+set "HIP_VISIBLE_DEVICES=0"
+set "GGML_VK_VISIBLE_DEVICES=0"
+
+
 :: -------------------------------------------------------
 :: Find Python: prefer portable USB copy, then system
 :: -------------------------------------------------------

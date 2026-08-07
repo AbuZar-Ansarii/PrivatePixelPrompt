@@ -670,7 +670,7 @@ if ($isHealthy) {
 # =================================================================
 Write-Host ""
 Write-Host "[6b/7] Downloading Stable Diffusion Image Engine (Windows)..." -ForegroundColor Yellow
-$SDZipURL = "https://github.com/leejet/stable-diffusion.cpp/releases/download/master-656-0e4ee04/sd-master-0e4ee04-bin-win-avx2-x64.zip"
+$SDZipURL = "https://github.com/leejet/stable-diffusion.cpp/releases/download/master-656-0e4ee04/sd-master-0e4ee04-bin-win-vulkan-x64.zip"
 $SDZipDest = "$USB_Drive\Shared\bin\sd-windows.zip"
 $SDDir = "$USB_Drive\Shared\bin\sd-windows"
 
@@ -876,6 +876,11 @@ if (-Not (Test-Path "$USB_Drive\Shared\bin\ollama-windows.exe")) {
         $env:OLLAMA_MODELS = "$USB_Drive\Shared\models\ollama_data"
         $env:OLLAMA_HOST = "127.0.0.1:11435"
         $env:OLLAMA_LIBRARY_PATH = "$USB_Drive\Shared\bin\lib\ollama"
+        $env:OLLAMA_VULKAN = "1"
+        $env:OLLAMA_IGPU_ENABLE = "1"
+        $env:HSA_OVERRIDE_GFX_VERSION = "10.3.0"
+        $env:HIP_VISIBLE_DEVICES = "0"
+        $env:GGML_VK_VISIBLE_DEVICES = "0"
         
         # Kill any existing ones first
         Stop-Process -Name "ollama-windows" -Force -ErrorAction SilentlyContinue

@@ -184,6 +184,47 @@ def _get_local_ip():
 
 LOCAL_IP = _get_local_ip()
 
+# ── GPU Discovery & Hardware Acceleration ─────────────────────
+def _detect_gpus():
+    """Detect available GPUs (AMD Radeon, NVIDIA CUDA, Intel) across platforms."""
+    gpus = {"nvidia": False, "amd": False, "intel": False, "names": []}
+    try:
+        plat = platform.system()
+        if plat == "Windows":
+            cmd = ["powershell", "-NoProfile", "-Command", "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                names = [line.strip() for line in res.stdout.splitlines() if line.strip()]
+                gpus["names"] = names
+                for name in names:
+                    n_upper = name.upper()
+                    if "NVIDIA" in n_upper or "GEFORCE" in n_upper or "QUADRO" in n_upper:
+                        gpus["nvidia"] = True
+                    if "AMD" in n_upper or "RADEON" in n_upper or "ADVANCED MICRO DEVICES" in n_upper:
+                        gpus["amd"] = True
+                    if "INTEL" in n_upper or "ARC" in n_upper:
+                        gpus["intel"] = True
+        elif plat == "Linux":
+            res = subprocess.run(["lspci"], capture_output=True, text=True, timeout=5)
+            if res.returncode == 0:
+                out = res.stdout.upper()
+                if "NVIDIA" in out:
+                    gpus["nvidia"] = True
+                if "AMD" in out or "RADEON" in out:
+                    gpus["amd"] = True
+                if "INTEL" in out:
+                    gpus["intel"] = True
+        elif plat == "Darwin":
+            gpus["apple_metal"] = True
+    except Exception as e:
+        print(f"[GPU DETECT] Warning during GPU discovery: {e}")
+    return gpus
+
+SYSTEM_GPUS = _detect_gpus()
+if SYSTEM_GPUS.get("names"):
+    print(f"[GPU DETECT] Available GPUs: {', '.join(SYSTEM_GPUS['names'])}")
+
+
 # ── Pure-Python Hardware Stats (no psutil needed) ──────────────
 _cpu_times_last = None  # (idle, total) from previous sample
 
@@ -240,8 +281,7 @@ def _get_hw_stats():
             d_total = total_v - prev_total
             _cpu_times_last = (idle_v, total_v)
 
-        cpu = round((1.0 - d_idle / max(d_total, 1)) * 100.0, 1)
-        cpu = max(0.0, min(100.0, cpu))
+        cpu = round(min(100.0, max(0.0, (1.0 - (d_idle) / max(d_total, 1)) * 100.0)), 1)
         return cpu, ram
 
     # ── Linux ─────────────────────────────────────────────────────
@@ -287,10 +327,32 @@ def _get_hw_stats():
 
     # ── macOS ─────────────────────────────────────────────────────
     else:
-        # User requested to skip macOS usage to avoid any potential permission/execution issues
         cpu = 0.0
         ram = 0.0
         return cpu, ram
+
+_last_gpu_util = (0.0, 0.0)
+
+def _get_gpu_utilization():
+    """Return GPU % utilization using Windows Performance Counters / stdlib tools."""
+    global _last_gpu_util
+    now = time.time()
+    if now - _last_gpu_util[0] < 2.0:
+        return _last_gpu_util[1]
+
+    val = 0.0
+    try:
+        plat = platform.system()
+        if plat == "Windows":
+            cmd = ["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine | Where-Object Name -like '*engtype_3D*' | Measure-Object -Property UtilizationPercentage -Sum).Sum"]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=2)
+            if res.returncode == 0 and res.stdout.strip():
+                val = round(min(100.0, max(0.0, float(res.stdout.strip()))), 1)
+    except Exception:
+        pass
+    _last_gpu_util = (now, val)
+    return val
+
 
 def _safe_int(value, default=0):
     try:
@@ -454,7 +516,7 @@ def _kill_ollama():
         time.sleep(0.5)
 
 def _start_ollama():
-    """Start Ollama in the background if binary exists."""
+    """Start Ollama in the background if binary exists, configuring GPU acceleration."""
     if not OLLAMA_BIN or not os.path.isfile(OLLAMA_BIN):
         return False
     try:
@@ -463,6 +525,22 @@ def _start_ollama():
         env["OLLAMA_ORIGINS"] = "*"
         env["OLLAMA_HOST"] = "127.0.0.1:11435"
         env["OLLAMA_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, "bin", "lib", "ollama")
+
+        # Enable GPU acceleration (AMD Radeon / Vulkan / ROCm / NVIDIA CUDA / Intel)
+        env["OLLAMA_VULKAN"] = "1"
+        env["OLLAMA_IGPU_ENABLE"] = "1"
+        if SYSTEM_GPUS.get("amd"):
+            env["HSA_OVERRIDE_GFX_VERSION"] = "10.3.0"
+            env["HIP_VISIBLE_DEVICES"] = "0"
+            env["GGML_VK_VISIBLE_DEVICES"] = "0"
+            print("[OLLAMA] Configured AMD Radeon GPU acceleration (Vulkan / ROCm).")
+        elif SYSTEM_GPUS.get("nvidia"):
+            env["CUDA_VISIBLE_DEVICES"] = "0"
+            print("[OLLAMA] Configured NVIDIA GPU acceleration (CUDA).")
+        elif SYSTEM_GPUS.get("intel"):
+            env["GGML_VK_VISIBLE_DEVICES"] = "0"
+            print("[OLLAMA] Configured Intel GPU acceleration (Vulkan).")
+
         subprocess.Popen([OLLAMA_BIN, "serve"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # Wait for it to be ready
         for _ in range(30):
@@ -577,6 +655,7 @@ def _run_sd_generation(job_id, payload, output_path):
     if sampling not in ("euler", "euler_a", "heun", "dpm2", "dpm++2m", "dpm++2mv2"):
         sampling = "euler_a"
 
+    env = os.environ.copy()
     cmd = [
         SD_BINARY,
         "-m", SD_MODEL,
@@ -588,17 +667,38 @@ def _run_sd_generation(job_id, payload, output_path):
         "-H", str(height),
         "--sampling-method", sampling,
         "--threads", str(os.cpu_count() or 4),
+        "--offload-to-cpu",
+        "--max-vram", "1.5",
     ]
     if negative:
         cmd += ["-n", negative]
     if seed != -1:
         cmd += ["--seed", str(seed)]
 
+    if SYSTEM_GPUS.get("amd"):
+        cmd += ["--backend", "vulkan", "--vae-on-cpu"]
+        env["HSA_OVERRIDE_GFX_VERSION"] = "10.3.0"
+        env["HIP_VISIBLE_DEVICES"] = "0"
+        env["GGML_VK_VISIBLE_DEVICES"] = "0"
+        env["OLLAMA_VULKAN"] = "1"
+        gpu_label = "AMD Radeon (Vulkan/ROCm enabled, VRAM offloading active)"
+    elif SYSTEM_GPUS.get("nvidia"):
+        cmd += ["--backend", "cuda"]
+        env["CUDA_VISIBLE_DEVICES"] = "0"
+        gpu_label = "NVIDIA GPU (CUDA enabled)"
+    elif SYSTEM_GPUS.get("intel"):
+        cmd += ["--backend", "vulkan"]
+        env["GGML_VK_VISIBLE_DEVICES"] = "0"
+        gpu_label = "Intel GPU (Vulkan enabled)"
+    else:
+        gpu_label = "CPU Mode"
+
     print(f"\n[SD] GENERATING IMAGE...")
     print(f"     Prompt: {prompt}")
     print(f"     Engine: {SD_BINARY}")
     print(f"     Model:  {SD_MODEL}")
     print(f"     Threads: {os.cpu_count() or 4}")
+    print(f"     GPU Accel: {gpu_label}")
     
     _update_image_job(
         job_id,
@@ -629,6 +729,7 @@ def _run_sd_generation(job_id, payload, output_path):
             stdout=subprocess.PIPE, 
             stderr=subprocess.STDOUT,
             cwd=SCRIPT_DIR,
+            env=env,
             bufsize=0
         )
         print(f"     Process started (PID: {proc.pid})")
@@ -1105,10 +1206,26 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
 
     # ── Hardware Stats ─────────────────────────────────────────
     def _get_stats(self):
-        """Return CPU % and RAM % as JSON. Works with no external packages."""
+        """Return CPU %, RAM %, GPU %, and GPU hardware details as JSON."""
         try:
             cpu, ram = _get_hw_stats()
-            data = json.dumps({"cpu_percent": cpu, "ram_percent": ram, "has_psutil": HAS_PSUTIL})
+            gpu_pct = _get_gpu_utilization()
+            gpu_accel = "CPU"
+            if SYSTEM_GPUS.get("amd"):
+                gpu_accel = "AMD Radeon (Vulkan/ROCm)"
+            elif SYSTEM_GPUS.get("nvidia"):
+                gpu_accel = "NVIDIA (CUDA)"
+            elif SYSTEM_GPUS.get("intel"):
+                gpu_accel = "Intel (Vulkan)"
+
+            data = json.dumps({
+                "cpu_percent": cpu,
+                "ram_percent": ram,
+                "gpu_percent": gpu_pct,
+                "has_psutil": HAS_PSUTIL,
+                "gpus": SYSTEM_GPUS.get("names", []),
+                "gpu_accel": gpu_accel
+            })
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self._cors_headers()
