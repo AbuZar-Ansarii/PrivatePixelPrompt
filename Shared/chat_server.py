@@ -474,11 +474,9 @@ def _start_ollama():
         return False
 
 def _parse_sd_output(pipe, job_id, total_steps):
-    """Read sd stdout+stderr in real-time handling both \r and \n line endings.
-    stable-diffusion.cpp prints progress using \r for in-place progress bars."""
-    ratio_pattern = re.compile(r"(?:step\s*)?(\d+)\s*/\s*(\d+)", re.IGNORECASE)
-    step_pattern = re.compile(r"step\s*:?\s*(\d+)", re.IGNORECASE)
-    pct_pattern = re.compile(r"(\d+)\s*%")
+    """Read sd stdout+stderr in real-time using non-blocking os.read and handling both \r and \n line endings.
+    stable-diffusion.cpp prints sampling progress using: |=====> | 1/20 - 2.50s/it \r"""
+    ratio_pattern = re.compile(r"\b(\d+)\s*/\s*(\d+)\b")
 
     last_step = 0
     step_start_time = None
@@ -486,11 +484,16 @@ def _parse_sd_output(pipe, job_id, total_steps):
     buffer = ""
 
     try:
+        fd = pipe.fileno()
         while True:
-            chunk = pipe.read(64)
-            if not chunk:
+            try:
+                raw_bytes = os.read(fd, 1024)
+            except (OSError, ValueError):
                 break
-            buffer += chunk.decode("utf-8", errors="ignore")
+            if not raw_bytes:
+                break
+                
+            buffer += raw_bytes.decode("utf-8", errors="ignore")
             
             # Split on carriage return \r and newline \n
             parts = re.split(r"[\r\n]+", buffer)
@@ -504,27 +507,17 @@ def _parse_sd_output(pipe, job_id, total_steps):
                 current_step = 0
                 matched_total = total_steps
 
-                m = ratio_pattern.search(line)
-                if m:
-                    s_val = int(m.group(1))
-                    t_val = int(m.group(2))
-                    if 0 < s_val <= t_val and t_val == total_steps:
-                        current_step = s_val
-                        matched_total = t_val
-
-                if not current_step:
-                    m = step_pattern.search(line)
-                    if m:
+                # Match any "X/Y" where Y equals total_steps (e.g. 1/20, 2/20)
+                for m in ratio_pattern.finditer(line):
+                    try:
                         s_val = int(m.group(1))
-                        if 0 < s_val <= total_steps:
+                        t_val = int(m.group(2))
+                        if 0 < s_val <= t_val and t_val == total_steps:
                             current_step = s_val
-
-                if not current_step:
-                    m = pct_pattern.search(line)
-                    if m and total_steps > 0:
-                        pct = int(m.group(1))
-                        if 0 <= pct <= 100:
-                            current_step = int(pct / 100.0 * total_steps)
+                            matched_total = t_val
+                            break
+                    except Exception:
+                        pass
 
                 if current_step > 0 and current_step != last_step:
                     now = time.time()
