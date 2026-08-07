@@ -71,11 +71,32 @@
       "label": "STANDARD",
       "badge": "LIGHTWEIGHT",
       "prompt": "You are a helpful AI assistant with expertise in reasoning and analysis."
+    },
+    {
+      "num": 7,
+      "name": "Liquid AI LFM2.5 230M",
+      "file": "LiquidAI-LFM2.5-230M.Q4_K_M.gguf",
+      "url": "https://huggingface.co/prithivMLmods/LiquidAI-LFM2.5-230M-GGUF/resolve/main/LiquidAI-LFM2.5-230M.Q4_K_M.gguf",
+      "size": "0.15",
+      "min_bytes": 100000000,
+      "local": "lfm2.5-230m-local",
+      "label": "STANDARD",
+      "badge": "SUPER LIGHTWEIGHT & ULTRA FAST",
+      "prompt": "You are a helpful, ultra-fast AI assistant powered by Liquid AI's LFM2.5 model. Answer all questions directly, accurately, and concisely."
     }
   ],
   "android_models": [
     {
       "num": 1,
+      "name": "Liquid AI LFM2.5 230M",
+      "file": "LiquidAI-LFM2.5-230M.Q4_K_M.gguf",
+      "url": "https://huggingface.co/prithivMLmods/LiquidAI-LFM2.5-230M-GGUF/resolve/main/LiquidAI-LFM2.5-230M.Q4_K_M.gguf",
+      "size": "0.15",
+      "label": "STANDARD",
+      "badge": "ULTRA FAST & SUPER LIGHT"
+    },
+    {
+      "num": 2,
       "name": "Gemma 2 2B Abliterated",
       "file": "gemma-2-2b-it-abliterated-Q4_K_M.gguf",
       "url": "https://huggingface.co/bartowski/gemma-2-2b-it-abliterated-GGUF/resolve/main/gemma-2-2b-it-abliterated-Q4_K_M.gguf",
@@ -84,7 +105,7 @@
       "badge": "FASTEST"
     },
     {
-      "num": 2,
+      "num": 3,
       "name": "SmolLM2 1.7B Uncensored",
       "file": "SmolLM2-1.7B-Instruct-Uncensored-Q4_K_M.gguf",
       "url": "https://huggingface.co/bartowski/SmolLM2-1.7B-Instruct-Uncensored-GGUF/resolve/main/SmolLM2-1.7B-Instruct-Uncensored-Q4_K_M.gguf",
@@ -93,7 +114,7 @@
       "badge": "LIGHT"
     },
     {
-      "num": 3,
+      "num": 4,
       "name": "Qwen2.5 1.5B Instruct",
       "file": "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
       "url": "https://huggingface.co/bartowski/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
@@ -102,7 +123,7 @@
       "badge": "MULTILINGUAL"
     },
     {
-      "num": 4,
+      "num": 5,
       "name": "Phi 3.5 Mini 3.8B",
       "file": "Phi-3.5-mini-instruct-Q4_K_M.gguf",
       "url": "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/main/Phi-3.5-mini-instruct-Q4_K_M.gguf",
@@ -111,7 +132,7 @@
       "badge": "SMART"
     },
     {
-      "num": 5,
+      "num": 6,
       "name": "Qwen 3.5 9B Uncensored",
       "file": "Qwen3.5-9B-Uncensored-Q4.gguf",
       "url": "https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
