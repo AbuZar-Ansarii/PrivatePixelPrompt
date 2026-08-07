@@ -474,74 +474,90 @@ def _start_ollama():
         return False
 
 def _parse_sd_output(pipe, job_id, total_steps):
-    """Read sd stdout+stderr line-by-line and update job progress.
-    stable-diffusion.cpp prints step info like 'step 1 sampling completed'.
-    We merge stdout+stderr so we catch progress regardless of which stream
-    the binary writes it to."""
-    # Match: "step 1 sampling completed" or "step 1/20" or "step 1 of 20"
-    step_pattern = re.compile(r"step\s+(\d+)", re.IGNORECASE)
-    # Only match X/Y when it follows "sampling" to avoid model-loading bars
-    sampling_pattern = re.compile(r"sampling.*?\b(\d+)\s*/\s*(\d+)", re.IGNORECASE)
-    # Only match % when it follows "sampling"
-    pct_pattern = re.compile(r"sampling.*?(\d+)")
+    """Read sd stdout+stderr in real-time handling both \r and \n line endings.
+    stable-diffusion.cpp prints progress using \r for in-place progress bars."""
+    ratio_pattern = re.compile(r"(?:step\s*)?(\d+)\s*/\s*(\d+)", re.IGNORECASE)
+    step_pattern = re.compile(r"step\s*:?\s*(\d+)", re.IGNORECASE)
+    pct_pattern = re.compile(r"(\d+)\s*%")
 
     last_step = 0
     step_start_time = None
     step_times = []
+    buffer = ""
 
     try:
-        for raw_line in iter(pipe.readline, b""):
-            line = raw_line.decode("utf-8", errors="ignore").strip()
-            if not line:
-                continue
+        while True:
+            chunk = pipe.read(64)
+            if not chunk:
+                break
+            buffer += chunk.decode("utf-8", errors="ignore")
+            
+            # Split on carriage return \r and newline \n
+            parts = re.split(r"[\r\n]+", buffer)
+            buffer = parts.pop()  # keep remaining un-terminated string in buffer
 
-            # Try to extract step / total
-            current_step = 0
-            matched_total = total_steps
+            for line in parts:
+                line = line.strip()
+                if not line:
+                    continue
 
-            m = step_pattern.search(line)
-            if m:
-                current_step = int(m.group(1))
-            else:
-                m = sampling_pattern.search(line)
+                current_step = 0
+                matched_total = total_steps
+
+                m = ratio_pattern.search(line)
                 if m:
-                    current_step = int(m.group(1))
-                    matched_total = int(m.group(2))
-                else:
+                    s_val = int(m.group(1))
+                    t_val = int(m.group(2))
+                    if 0 < s_val <= t_val and t_val == total_steps:
+                        current_step = s_val
+                        matched_total = t_val
+
+                if not current_step:
+                    m = step_pattern.search(line)
+                    if m:
+                        s_val = int(m.group(1))
+                        if 0 < s_val <= total_steps:
+                            current_step = s_val
+
+                if not current_step:
                     m = pct_pattern.search(line)
                     if m and total_steps > 0:
                         pct = int(m.group(1))
-                        current_step = int(pct / 100.0 * total_steps)
+                        if 0 <= pct <= 100:
+                            current_step = int(pct / 100.0 * total_steps)
 
-            if current_step > 0:
-                now = time.time()
-                if step_start_time is not None and current_step > last_step:
-                    for _ in range(current_step - last_step):
-                        step_times.append(now - step_start_time)
-                        if len(step_times) > 10:
-                            step_times.pop(0)
-                step_start_time = now
-                last_step = current_step
+                if current_step > 0 and current_step != last_step:
+                    now = time.time()
+                    if step_start_time is not None and current_step > last_step:
+                        for _ in range(current_step - last_step):
+                            step_times.append(now - step_start_time)
+                            if len(step_times) > 10:
+                                step_times.pop(0)
+                    step_start_time = now
+                    last_step = current_step
 
-                job = _get_image_job(job_id)
-                elapsed = now - job.get("started_at", now)
-                eta_ms = None
-                if current_step < matched_total and step_times:
-                    avg_step = sum(step_times) / len(step_times)
-                    eta_ms = int(avg_step * (matched_total - current_step) * 1000)
+                    job = _get_image_job(job_id)
+                    elapsed = now - job.get("started_at", now)
+                    eta_ms = None
+                    if current_step < matched_total and step_times:
+                        avg_step = sum(step_times) / len(step_times)
+                        eta_ms = int(avg_step * (matched_total - current_step) * 1000)
 
-                _update_image_job(
-                    job_id,
-                    status="generating",
-                    step=current_step,
-                    total_steps=matched_total,
-                    elapsed_ms=int(elapsed * 1000),
-                    eta_ms=eta_ms,
-                )
-    except Exception:
-        pass
+                    _update_image_job(
+                        job_id,
+                        status="generating",
+                        step=current_step,
+                        total_steps=matched_total,
+                        elapsed_ms=int(elapsed * 1000),
+                        eta_ms=eta_ms,
+                    )
+    except Exception as e:
+        print(f"[SD] Progress parser info: {e}")
     finally:
-        pipe.close()
+        try:
+            pipe.close()
+        except Exception:
+            pass
 
 def _run_sd_generation(job_id, payload, output_path):
     """Run stable-diffusion.cpp CLI to generate an image asynchronously. Updates job dict."""
