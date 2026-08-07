@@ -2836,42 +2836,65 @@
         <!-- Text to Speech Panel -->
         <div id="tts-panel">
           <div class="tts-wrap">
-            <div class="img-engine-card">
-              <div class="img-engine-title">TTS Engine</div>
-              <div class="img-engine-row">
-                <div class="img-engine-info">
-                  <span class="img-engine-dot" id="tts-engine-dot"></span>
-                  <span class="img-engine-name">Piper TTS</span>
-                  <span class="img-engine-status" id="tts-engine-status">Checking...</span>
+            <!-- Mode Subtabs -->
+            <div class="mode-tabs" style="align-self: flex-start; margin-bottom: 4px;">
+              <button class="mode-tab act" id="tts-subtab-create"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Voice</button>
+              <button class="mode-tab" id="tts-subtab-gallery"><i class="fa-solid fa-volume-high"></i> Audio Library</button>
+            </div>
+
+            <!-- Create Voice View -->
+            <div id="tts-view-create" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+              <div class="img-engine-card">
+                <div class="img-engine-title">TTS Engine</div>
+                <div class="img-engine-row">
+                  <div class="img-engine-info">
+                    <span class="img-engine-dot" id="tts-engine-dot"></span>
+                    <span class="img-engine-name">Piper TTS</span>
+                    <span class="img-engine-status" id="tts-engine-status">Checking...</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="img-row">
+                <label>Text to Speak</label>
+                <textarea id="tts-text" placeholder="Enter text to convert to speech..." style="min-height:120px"></textarea>
+              </div>
+
+              <div class="img-row">
+                <label>Voice</label>
+                <select id="tts-voice" class="sys-select" style="width:100%; height:40px; padding:0 12px;">
+                  <option value="">Loading voices...</option>
+                </select>
+              </div>
+
+              <div class="img-actions">
+                <button class="img-btn primary" id="tts-gen-btn">
+                  <i class="fa-solid fa-play"></i> Generate & Play
+                </button>
+              </div>
+
+              <div class="tts-audio-card" id="tts-result" style="display:none;">
+                <audio id="tts-audio-player" class="tts-player" controls></audio>
+                <div class="img-actions" style="width:100%; margin-top:8px;">
+                  <a id="tts-download-link" class="img-btn" style="text-decoration:none; flex:1; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fa-solid fa-download"></i> Download WAV
+                  </a>
                 </div>
               </div>
             </div>
 
-            <div class="img-row">
-              <label>Text to Speak</label>
-              <textarea id="tts-text" placeholder="Enter text to convert to speech..." style="min-height:120px"></textarea>
-            </div>
-
-            <div class="img-row">
-              <label>Voice</label>
-              <select id="tts-voice" class="sys-select" style="width:100%; height:40px; padding:0 12px;">
-                <option value="">Loading voices...</option>
-              </select>
-            </div>
-
-            <div class="img-actions">
-              <button class="img-btn primary" id="tts-gen-btn">
-                <i class="fa-solid fa-play"></i> Generate & Play
-              </button>
-            </div>
-
-            <div class="tts-audio-card" id="tts-result" style="display:none;">
-              <audio id="tts-audio-player" class="tts-player" controls></audio>
-              <div class="img-actions" style="width:100%; margin-top:8px;">
-                <a id="tts-download-link" class="img-btn" style="text-decoration:none; flex:1; display:flex; align-items:center; justify-content:center; gap:8px;">
-                  <i class="fa-solid fa-download"></i> Download WAV
-                </a>
+            <!-- Audio Library View -->
+            <div id="tts-view-gallery" style="display: none; flex-direction: column; gap: 16px; width: 100%;">
+              <div class="img-engine-card">
+                <div class="img-engine-row" style="border:none; padding:0;">
+                  <div class="img-engine-info">
+                    <i class="fa-solid fa-volume-high" style="color:var(--grad1); font-size:18px;"></i>
+                    <span class="img-engine-name" style="font-size:15px; font-weight:700;">Generated Speech Library</span>
+                  </div>
+                  <button class="img-engine-btn" id="refresh-audio-gallery-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                </div>
               </div>
+              <div id="audio-gallery-grid" class="audio-gallery-grid"></div>
             </div>
           </div>
         </div>
@@ -3049,6 +3072,14 @@
           });
         }
 
+        const sbAudioLibBtn = document.getElementById('sb-audio-lib-btn');
+        if (sbAudioLibBtn) {
+          sbAudioLibBtn.addEventListener('click', () => {
+            switchMode('tts');
+            switchTtsSubTab('gallery');
+          });
+        }
+
         const subtabCreate = document.getElementById('img-subtab-create');
         const subtabGallery = document.getElementById('img-subtab-gallery');
         const refreshGalleryBtn = document.getElementById('refresh-gallery-btn');
@@ -3056,6 +3087,14 @@
         if (subtabCreate) subtabCreate.addEventListener('click', () => switchImgSubTab('create'));
         if (subtabGallery) subtabGallery.addEventListener('click', () => switchImgSubTab('gallery'));
         if (refreshGalleryBtn) refreshGalleryBtn.addEventListener('click', () => fetchGeneratedImages());
+
+        const ttsSubtabCreate = document.getElementById('tts-subtab-create');
+        const ttsSubtabGallery = document.getElementById('tts-subtab-gallery');
+        const refreshAudioGalleryBtn = document.getElementById('refresh-audio-gallery-btn');
+
+        if (ttsSubtabCreate) ttsSubtabCreate.addEventListener('click', () => switchTtsSubTab('create'));
+        if (ttsSubtabGallery) ttsSubtabGallery.addEventListener('click', () => switchTtsSubTab('gallery'));
+        if (refreshAudioGalleryBtn) refreshAudioGalleryBtn.addEventListener('click', () => fetchGeneratedAudio());
 
         pollHW();
         setInterval(pollHW, 5000);
@@ -3527,6 +3566,97 @@
           }
         } catch {
           toast('Failed to delete image');
+        }
+      }
+
+      // ── Audio Library ───────────────────────────────────────────
+      function switchTtsSubTab(sub) {
+        const isCreate = sub === 'create';
+        const tabCreate = document.getElementById('tts-subtab-create');
+        const tabGallery = document.getElementById('tts-subtab-gallery');
+        const viewCreate = document.getElementById('tts-view-create');
+        const viewGallery = document.getElementById('tts-view-gallery');
+
+        if (tabCreate) tabCreate.classList.toggle('act', isCreate);
+        if (tabGallery) tabGallery.classList.toggle('act', !isCreate);
+        if (viewCreate) viewCreate.style.display = isCreate ? 'flex' : 'none';
+        if (viewGallery) viewGallery.style.display = !isCreate ? 'flex' : 'none';
+
+        if (!isCreate) {
+          fetchGeneratedAudio();
+        }
+      }
+
+      async function fetchGeneratedAudio() {
+        const grid = document.getElementById('audio-gallery-grid');
+        if (!grid) return;
+        grid.innerHTML = '<div style="padding:24px; text-align:center; color:var(--t3);"><i class="fa-solid fa-spinner fa-spin"></i> Loading audio library...</div>';
+        try {
+          const r = await fetch('/api/generated-tts');
+          if (!r.ok) throw new Error('Failed to load audio library');
+          const d = await r.json();
+          renderAudioGallery(d.audio_files || []);
+        } catch (e) {
+          grid.innerHTML = `<div style="padding:24px; text-align:center; color:var(--red);">Failed to load audio library: ${esc(e.message)}</div>`;
+        }
+      }
+
+      function renderAudioGallery(audioFiles) {
+        const grid = document.getElementById('audio-gallery-grid');
+        if (!grid) return;
+        if (!audioFiles.length) {
+          grid.innerHTML = '<div style="padding:40px; text-align:center; color:var(--t3); background:var(--bg2); border-radius:var(--radius-lg); border:1px solid var(--bd);"><i class="fa-solid fa-volume-high" style="font-size:32px; margin-bottom:12px; opacity:0.5;"></i><div>No generated audio found yet.</div><div style="font-size:12px; margin-top:4px; color:var(--t3);">Generated speech files are saved in <code>shared/chat_data/tts_output</code></div></div>';
+          return;
+        }
+
+        grid.innerHTML = audioFiles
+          .map((aud) => {
+            const textEsc = esc(aud.text || 'Speech Audio');
+            const voiceEsc = esc(aud.voice || 'Piper TTS');
+            const dateStr = aud.created_at ? new Date(aud.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '';
+            const rawTextJson = esc(JSON.stringify(aud.text || ''));
+
+            return `
+              <div class="audio-card">
+                <div class="audio-card-header">
+                  <div class="audio-card-voice"><i class="fa-solid fa-user"></i> ${voiceEsc}</div>
+                  <div class="audio-card-date">${esc(dateStr)}</div>
+                </div>
+                <div class="audio-card-text">${textEsc}</div>
+                <audio class="audio-card-player" controls src="${esc(aud.url)}"></audio>
+                <div class="audio-card-actions">
+                  <button class="gallery-btn" onclick='reuseAudioText(${rawTextJson})'><i class="fa-solid fa-arrow-rotate-left"></i> Reuse Text</button>
+                  <a class="gallery-btn" href="${esc(aud.url)}" download="${esc(aud.filename)}" style="text-decoration:none;"><i class="fa-solid fa-download"></i> Download</a>
+                  <button class="gallery-btn del" onclick="deleteAudioItem('${esc(aud.filename)}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>`;
+          })
+          .join('');
+      }
+
+      function reuseAudioText(text) {
+        if (!text) return;
+        D.ttsText.value = text;
+        switchTtsSubTab('create');
+        toast('Text loaded into TTS generator');
+      }
+
+      async function deleteAudioItem(filename) {
+        if (!confirm('Are you sure you want to delete this audio from your library?')) return;
+        try {
+          const r = await fetch('/api/delete-generated-tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename }),
+          });
+          if (r.ok) {
+            toast('Audio deleted');
+            fetchGeneratedAudio();
+          } else {
+            toast('Failed to delete audio');
+          }
+        } catch {
+          toast('Failed to delete audio');
         }
       }
 
@@ -4378,6 +4508,7 @@
           D.ttsAudioPlayer.play();
 
           toast('Speech generated!', 'green');
+          fetchGeneratedAudio();
         } catch (e) {
           console.error(e);
           toast(e.message || 'Error generating TTS', 'red');

@@ -903,6 +903,10 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/generated-images":
             self._get_generated_images()
 
+        # Generated TTS audio library API
+        elif path == "/api/generated-tts":
+            self._get_generated_tts()
+
         # Proxy Ollama API
         elif path.startswith("/ollama/"):
             self._proxy_ollama("GET")
@@ -931,6 +935,10 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         # TTS generation API
         elif path == "/api/generate-tts":
             self._generate_tts()
+
+        # Delete generated TTS audio API
+        elif path == "/api/delete-generated-tts":
+            self._delete_generated_tts()
 
         # Engine control APIs
         elif path == "/api/stop-ollama":
@@ -989,7 +997,8 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             mime_types = {
                 ".html": "text/html", ".css": "text/css", ".js": "application/javascript",
                 ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
-                ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon"
+                ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml",
+                ".ico": "image/x-icon", ".wav": "audio/wav", ".mp3": "audio/mpeg", ".ogg": "audio/ogg"
             }
             content_type = mime_types.get(ext, "application/octet-stream")
             with open(full_path, "rb") as f:
@@ -1390,6 +1399,73 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data.encode())
 
+    def _get_generated_tts(self):
+        """Scan chat_data/tts_output directory and return list of generated audio metadata."""
+        audio_dir = os.path.join(SCRIPT_DIR, "chat_data", "tts_output")
+        results = []
+        if os.path.isdir(audio_dir):
+            valid_exts = (".wav", ".mp3", ".ogg")
+            for filename in os.listdir(audio_dir):
+                if filename.lower().endswith(valid_exts):
+                    file_path = os.path.join(audio_dir, filename)
+                    meta_path = file_path + ".json"
+                    stat_info = os.stat(file_path)
+                    
+                    item = {
+                        "id": os.path.splitext(filename)[0],
+                        "filename": filename,
+                        "url": f"/chat_data/tts_output/{quote(filename)}",
+                        "size": stat_info.st_size,
+                        "timestamp": stat_info.st_mtime,
+                        "created_at": datetime.fromtimestamp(stat_info.st_mtime).isoformat(),
+                        "text": "",
+                        "voice": "Piper TTS"
+                    }
+                    
+                    if os.path.isfile(meta_path):
+                        try:
+                            with open(meta_path, "r", encoding="utf-8") as f:
+                                meta = json.load(f)
+                                item.update(meta)
+                        except Exception:
+                            pass
+                            
+                    results.append(item)
+                    
+        results.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+        
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self._cors_headers()
+        self.end_headers()
+        self.wfile.write(json.dumps({"audio_files": results}).encode())
+
+    def _delete_generated_tts(self):
+        """Delete a generated audio file and its metadata sidecar."""
+        body = self._read_body()
+        try:
+            payload = json.loads(body) if body else {}
+            raw_fname = payload.get("filename", "")
+            filename = unquote(os.path.basename(raw_fname))
+            if filename:
+                audio_dir = os.path.join(SCRIPT_DIR, "chat_data", "tts_output")
+                audio_path = os.path.join(audio_dir, filename)
+                meta_path = audio_path + ".json"
+                if os.path.isfile(audio_path):
+                    os.remove(audio_path)
+                if os.path.isfile(meta_path):
+                    os.remove(meta_path)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self._cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
     def _generate_tts(self):
         """Generate speech from text using Piper and return the audio file."""
         request_context = self._build_request_context("/api/generate-tts")
@@ -1417,7 +1493,7 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": "Voice model not found"}).encode())
             return
 
-        # Output to a temporary file
+        # Output to persistent tts_output directory
         output_id = str(uuid.uuid4())
         output_dir = os.path.join(SCRIPT_DIR, "chat_data", "tts_output")
         os.makedirs(output_dir, exist_ok=True)
@@ -1441,11 +1517,27 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             if not os.path.isfile(output_path):
                 raise RuntimeError("Piper finished but no output file was created.")
 
+            # Save metadata sidecar
+            clean_voice = voice_id.replace(".onnx", "")
+            meta_path = output_path + ".json"
+            meta_data = {
+                "id": output_id,
+                "filename": f"{output_id}.wav",
+                "url": f"/chat_data/tts_output/{quote(output_id)}.wav",
+                "text": text,
+                "voice": clean_voice,
+                "voice_id": voice_id,
+                "created_at": datetime.now().isoformat(),
+                "timestamp": time.time()
+            }
+            try:
+                with open(meta_path, "w", encoding="utf-8") as mf:
+                    json.dump(meta_data, mf, indent=2)
+            except Exception:
+                pass
+
             with open(output_path, "rb") as f:
                 audio_data = f.read()
-
-            try: os.remove(output_path)
-            except: pass
 
             self.send_response(200)
             self.send_header("Content-Type", "audio/wav")
