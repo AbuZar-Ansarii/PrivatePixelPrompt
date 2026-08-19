@@ -680,7 +680,7 @@ else
     export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME/runners"
     export OLLAMA_TMPDIR="$OLLAMA_RUNTIME/tmp"
     export OLLAMA_ORIGINS="*"
-    export OLLAMA_HOST="127.0.0.1:11434"
+    export OLLAMA_HOST="127.0.0.1:11435"
 
     # Kill any stale Ollama process
     pkill -f "ollama-darwin" 2>/dev/null
@@ -691,7 +691,7 @@ else
     OLLAMA_PID=$!
 
     for i in $(seq 1 30); do
-        curl -s http://127.0.0.1:11434/api/tags > /dev/null 2>&1 && break
+        curl -s http://127.0.0.1:11435/api/tags > /dev/null 2>&1 && break
         sleep 1
     done
 

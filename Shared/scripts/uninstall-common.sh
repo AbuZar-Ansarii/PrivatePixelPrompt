@@ -149,7 +149,7 @@ remove_ollama_aliases() {
   fi
 
   export OLLAMA_MODELS="$OLLAMA_DATA"
-  export OLLAMA_HOST="127.0.0.1:11434"
+  export OLLAMA_HOST="127.0.0.1:11435"
   export OLLAMA_ORIGINS="*"
   export OLLAMA_HOME="$OLLAMA_RUNTIME_SHARED"
   export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME_SHARED/runners"
@@ -162,7 +162,7 @@ remove_ollama_aliases() {
   OLLAMA_PID=$!
 
   tries=0
-  until curl -s "http://127.0.0.1:11434/api/tags" >/dev/null 2>&1; do
+  until curl -s "http://127.0.0.1:11435/api/tags" >/dev/null 2>&1; do
     tries=$((tries + 1))
     if [ "$tries" -ge 20 ]; then
       echo -e "      ${YLW}Could not start Ollama server. Skipping alias removal.${RST}"

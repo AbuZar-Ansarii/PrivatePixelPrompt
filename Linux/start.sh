@@ -46,16 +46,26 @@ if [ ! -f "$SHARED_DIR/bin/ollama-linux" ]; then
 fi
 
 # Check if Ollama is already running
-if curl -s http://127.0.0.1:11434/api/tags > /dev/null 2>&1; then
+if curl -s http://127.0.0.1:11435/api/tags > /dev/null 2>&1; then
     echo "[OK] Ollama engine is already running!"
 else
     echo "Starting offline Linux AI Engine..."
-    HOME="$OLLAMA_RUNTIME" "$SHARED_DIR/bin/ollama-linux" serve &
+    HOME="$OLLAMA_RUNTIME" "$SHARED_DIR/bin/ollama-linux" serve > "$OLLAMA_RUNTIME/server.log" 2>&1 &
     OLLAMA_PID=$!
     
     echo "Waiting for engine to initialize..."
-    until curl -s http://127.0.0.1:11434/api/tags > /dev/null 2>&1; do
+    WAIT_COUNT=0
+    until curl -s http://127.0.0.1:11435/api/tags > /dev/null 2>&1; do
         sleep 1
+        WAIT_COUNT=$((WAIT_COUNT + 1))
+        if [ "$WAIT_COUNT" -ge 60 ]; then
+            echo ""
+            echo "ERROR: Engine failed to respond after 60 seconds."
+            echo "Check log: $OLLAMA_RUNTIME/server.log"
+            echo "Please run install.sh again to repair the engine."
+            [ -n "$OLLAMA_PID" ] && kill -9 $OLLAMA_PID 2>/dev/null
+            exit 1
+        fi
     done
     echo "[OK] Engine is online!"
 fi
