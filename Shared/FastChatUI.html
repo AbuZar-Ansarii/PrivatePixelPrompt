@@ -1273,22 +1273,53 @@
       /* Message action bar */
       .mact {
         display: flex;
-        gap: 5px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
         margin-top: 12px;
         opacity: 0;
-        transition: opacity 0.2s var(--ease);
+        transition: opacity 0.22s var(--ease);
       }
-      .mr:hover .mact {
+      .mr:hover .mact,
+      .mr.is-streaming .mact {
         opacity: 1;
+      }
+      .mact-btns {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .msg-stats-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg3);
+        padding: 4px 10px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--bd);
+        font-size: 11px;
+        color: var(--t3);
+        font-family: var(--font-mono);
+        font-weight: 500;
+        user-select: none;
+        transition: all 0.2s ease;
+      }
+      .msg-stats-pill:hover {
+        border-color: var(--bd2);
+        color: var(--t2);
+      }
+      .msg-stats-pill .dot-sep {
+        opacity: 0.35;
       }
       .mab {
         background: var(--bg3);
         border: 1px solid var(--bd);
         color: var(--t3);
         cursor: pointer;
-        padding: 6.5px 11px;
+        padding: 6px 11px;
         border-radius: var(--radius-xs);
-        font-size: 13px;
+        font-size: 12.5px;
         transition: all 0.18s var(--ease);
         display: flex;
         align-items: center;
@@ -1313,11 +1344,11 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 12px 0;
+        padding: 10px 0;
       }
       .typ span {
-        width: 8.5px;
-        height: 8.5px;
+        width: 8px;
+        height: 8px;
         background: var(--grad1);
         border-radius: 50%;
         animation: typBounce 1.4s infinite ease-in-out;
@@ -1334,12 +1365,157 @@
       @keyframes typBounce {
         0%, 60%, 100% {
           transform: translateY(0);
-          opacity: 0.4;
+          opacity: 0.35;
         }
         30% {
-          transform: translateY(-8px);
+          transform: translateY(-7px);
           opacity: 1;
         }
+      }
+
+      /* High-End Glowing Animated Streaming Cursor */
+      .stream-cursor {
+        display: inline-block;
+        width: 7.5px;
+        height: 15.5px;
+        margin-left: 3px;
+        vertical-align: -2.5px;
+        background: linear-gradient(135deg, #60a5fa, #a855f7, #ec4899);
+        border-radius: 3px;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.75), 0 0 18px rgba(96, 165, 250, 0.4);
+        animation: streamCursorPulse 0.85s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      @keyframes streamCursorPulse {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+          filter: brightness(1.15);
+        }
+        100% {
+          opacity: 0.25;
+          transform: scale(0.92);
+          filter: brightness(0.85);
+        }
+      }
+
+      /* Active streaming message highlight & avatar aurora pulse */
+      .mr.is-streaming .mt {
+        position: relative;
+      }
+      .mr.is-streaming .ma.ai {
+        position: relative;
+        animation: pulseAiIcon 2s infinite ease-in-out;
+      }
+      @keyframes pulseAiIcon {
+        0%, 100% {
+          box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6), 0 4px 16px var(--shd-glow);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(99, 102, 241, 0), 0 4px 22px rgba(168, 85, 247, 0.5);
+        }
+      }
+
+      /* Thinking / Reasoning process box */
+      .think-box {
+        margin-bottom: 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.025);
+        backdrop-filter: blur(8px);
+        overflow: hidden;
+        font-size: 12.5px;
+        transition: all 0.25s var(--ease);
+      }
+      .think-box.thinking {
+        border-color: rgba(99, 102, 241, 0.45);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(168, 85, 247, 0.03));
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.12);
+      }
+      .think-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 12px;
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--t2);
+        font-weight: 600;
+        font-size: 11.5px;
+        letter-spacing: 0.35px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      .think-hdr:hover {
+        background: rgba(0, 0, 0, 0.32);
+        color: var(--t1);
+      }
+      .think-hdr-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .think-chevron {
+        font-size: 10px;
+        color: var(--t3);
+        transition: transform 0.2s ease;
+      }
+      .think-box.collapsed .think-chevron {
+        transform: rotate(-90deg);
+      }
+      .think-box.collapsed .think-body {
+        display: none;
+      }
+      .think-body {
+        padding: 10px 14px;
+        color: var(--t3);
+        line-height: 1.6;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        max-height: 360px;
+        overflow-y: auto;
+      }
+      .think-body p { margin: 0 0 6px 0; }
+      .think-body p:last-child { margin: 0; }
+      .pulse-brain {
+        color: var(--grad1);
+        filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.7));
+      }
+
+      /* Floating Scroll-to-Bottom Button */
+      .scroll-bottom-btn {
+        position: sticky;
+        bottom: 20px;
+        align-self: center;
+        margin-top: -45px;
+        margin-bottom: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg3);
+        color: var(--t1);
+        border: 1px solid var(--bd2);
+        border-radius: var(--radius-pill);
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(12px);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(12px) scale(0.95);
+        transition: all 0.22s var(--ease);
+        z-index: 20;
+      }
+      .scroll-bottom-btn.visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+      }
+      .scroll-bottom-btn:hover {
+        background: var(--bga);
+        border-color: var(--grad1);
+        box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+        transform: translateY(-2px) scale(1.02);
       }
 
       /* ════════════════════════════════════════════════════════════
@@ -2590,6 +2766,10 @@
           </div>
 
           <div id="msgs"></div>
+          <button id="scroll-bottom-btn" class="scroll-bottom-btn" onclick="scrollToBottomSmooth()" title="Jump to latest response">
+            <i class="fa-solid fa-arrow-down"></i>
+            <span>Jump to latest</span>
+          </button>
         </div>
 
         <!-- Input Area -->
@@ -3070,6 +3250,7 @@
       async function init() {
         setupMarked();
         applyTheme(S.theme);
+        initScrollListener();
         if (!S.sbOpen) D.sb.classList.add('off');
 
         await loadGlobalPrompt();
@@ -4245,16 +4426,19 @@
           ts: Date.now(),
           liked: false,
           disliked: false,
+          stats: null,
         };
         conv.msgs.push(aiMsg);
         renderChat();
         scrollEnd();
 
         const lastRow = D.msgs.lastElementChild;
+        if (lastRow) lastRow.classList.add('is-streaming');
         const contentEl = lastRow ? lastRow.querySelector('.mt') : null;
-        if (contentEl)
+        if (contentEl) {
           contentEl.innerHTML =
             '<div class="typ"><span></span><span></span><span></span></div>';
+        }
 
         S.abort = new AbortController();
         let apiMsgs = [];
@@ -4264,6 +4448,68 @@
           if (m.images) am.images = m.images;
           apiMsgs.push(am);
         });
+
+        let rawBuffer = '';
+        let targetContent = '';
+        let displayedLength = 0;
+        let started = false;
+        let streamDone = false;
+        let thinkStartTime = null;
+        let thinkTimerSec = null;
+        let rafId = null;
+        let lastHighlightTime = 0;
+
+        const updateStreamingView = (isStreamingFinal) => {
+          if (!contentEl) return;
+          const currentText = targetContent.slice(0, displayedLength);
+          aiMsg.content = currentText;
+
+          if (currentText.includes('<think>') && !currentText.includes('</think>')) {
+            if (!thinkStartTime) thinkStartTime = Date.now();
+            thinkTimerSec = ((Date.now() - thinkStartTime) / 1000).toFixed(1);
+          } else {
+            thinkTimerSec = null;
+          }
+
+          contentEl.innerHTML = renderMd(currentText, isStreamingFinal, thinkTimerSec);
+
+          // Throttled syntax highlighting during streaming for 60fps performance
+          const now = Date.now();
+          if (!isStreamingFinal || now - lastHighlightTime > 150) {
+            lastHighlightTime = now;
+            contentEl.querySelectorAll('pre code:not(.hljs)').forEach((b) => {
+              if (typeof hljs !== 'undefined') hljs.highlightElement(b);
+            });
+          }
+          smartScroll();
+        };
+
+        // Smooth Ticker Loop (Fluid Token Typing Animation)
+        const ticker = () => {
+          if (displayedLength < targetContent.length) {
+            const diff = targetContent.length - displayedLength;
+            let step;
+            if (diff > 160) {
+              step = Math.ceil(diff / 6);
+            } else if (diff > 60) {
+              step = Math.ceil(diff / 10) + 3;
+            } else if (diff > 20) {
+              step = 2;
+            } else {
+              step = 1;
+            }
+            displayedLength = Math.min(targetContent.length, displayedLength + step);
+            updateStreamingView(true);
+          } else if (streamDone) {
+            displayedLength = targetContent.length;
+            aiMsg.content = targetContent;
+            updateStreamingView(false);
+            return;
+          }
+          rafId = requestAnimationFrame(ticker);
+        };
+
+        rafId = requestAnimationFrame(ticker);
 
         try {
           const res = await fetch(OLLAMA + '/api/chat', {
@@ -4281,50 +4527,99 @@
             }),
             signal: S.abort.signal,
           });
-          if (!res.ok) throw new Error('Ollama error ' + res.status);
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+            throw new Error(errData.error || `Ollama error ${res.status}`);
+          }
 
           const reader = res.body.getReader();
           const dec = new TextDecoder();
-          if (contentEl) contentEl.innerHTML = '';
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            const chunk = dec.decode(value, { stream: true });
-            for (const line of chunk.split('\n')) {
+
+            rawBuffer += dec.decode(value, { stream: true });
+            const lines = rawBuffer.split('\n');
+            // Keep trailing incomplete line for next iteration
+            rawBuffer = lines.pop() || '';
+
+            for (const line of lines) {
               if (!line.trim()) continue;
               try {
                 const p = JSON.parse(line);
                 if (p.message?.content) {
-                  aiMsg.content += p.message.content;
-                  if (contentEl) contentEl.textContent = aiMsg.content;
-                  scrollEnd();
+                  if (!started) {
+                    started = true;
+                    if (contentEl) contentEl.innerHTML = '';
+                  }
+                  targetContent += p.message.content;
+                }
+                if (p.done && p.eval_count && p.eval_duration) {
+                  const tps = (p.eval_count / (p.eval_duration / 1e9)).toFixed(1);
+                  const totalSec = ((p.total_duration || p.eval_duration) / 1e9).toFixed(1);
+                  aiMsg.stats = {
+                    tokens: p.eval_count,
+                    tps: tps,
+                    duration: totalSec,
+                  };
                 }
               } catch {}
             }
           }
-          if (contentEl) {
-            contentEl.innerHTML = renderMd(aiMsg.content);
-            contentEl.querySelectorAll('pre code').forEach((b) => {
-              if (!b.classList.contains('hljs')) hljs.highlightElement(b);
-            });
+
+          // Process trailing fragment if any
+          if (rawBuffer.trim()) {
+            try {
+              const p = JSON.parse(rawBuffer);
+              if (p.message?.content) targetContent += p.message.content;
+              if (p.done && p.eval_count && p.eval_duration) {
+                const tps = (p.eval_count / (p.eval_duration / 1e9)).toFixed(1);
+                const totalSec = ((p.total_duration || p.eval_duration) / 1e9).toFixed(1);
+                aiMsg.stats = {
+                  tokens: p.eval_count,
+                  tps: tps,
+                  duration: totalSec,
+                };
+              }
+            } catch {}
           }
         } catch (err) {
           if (err.name === 'AbortError') {
-            if (aiMsg.content) {
-              if (contentEl) contentEl.innerHTML = renderMd(aiMsg.content);
-            } else if (contentEl)
+            if (targetContent) {
+              displayedLength = targetContent.length;
+            } else if (contentEl) {
               contentEl.innerHTML =
                 '<span style="color:var(--t3);font-style:italic;">[Stopped]</span>';
+            }
           } else {
-            if (contentEl)
-              contentEl.innerHTML = `<span style="color:var(--red);">ÔÜá ${esc(err.message)}</span>`;
+            if (contentEl) {
+              contentEl.innerHTML = `<span style="color:var(--red);">⚠️ ${esc(err.message)}</span>`;
+            }
             conv.msgs.pop();
           }
         } finally {
+          streamDone = true;
+          await new Promise((r) => setTimeout(r, 60));
+          if (rafId) cancelAnimationFrame(rafId);
+
+          displayedLength = targetContent.length;
+          aiMsg.content = targetContent;
+
+          if (lastRow) lastRow.classList.remove('is-streaming');
+          if (contentEl && aiMsg.content) {
+            contentEl.innerHTML = renderMd(aiMsg.content, false);
+            contentEl.querySelectorAll('pre code').forEach((b) => {
+              if (typeof hljs !== 'undefined' && !b.classList.contains('hljs')) {
+                hljs.highlightElement(b);
+              }
+            });
+          }
+
           S.streaming = false;
           updateSend();
           save();
+          renderChat();
           scrollEnd();
           setTimeout(() => D.inp.focus(), 100);
         }
@@ -4334,7 +4629,7 @@
         if (S.abort) S.abort.abort();
       }
 
-      // ÔöÇÔöÇ Markdown ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      // ── Markdown ───────────────────────────────────────────────
       function setupMarked() {
         if (typeof marked === 'undefined') return;
         const rdr = new marked.Renderer();
@@ -4354,13 +4649,91 @@
         };
         marked.setOptions({ gfm: true, breaks: true, renderer: rdr });
       }
-      function renderMd(text) {
-        if (typeof marked === 'undefined')
-          return esc(text).replace(/\n/g, '<br>');
-        return marked.parse(text, { breaks: true });
+
+      function toggleThinkBox(hdrEl) {
+        const box = hdrEl?.closest('.think-box');
+        if (box) {
+          box.classList.toggle('collapsed');
+        }
       }
 
-      // ÔöÇÔöÇ Rendering ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      function speakMsg(id) {
+        const m = getConv()?.msgs.find((x) => x.id === id);
+        if (!m || !m.content) return;
+        let plain = m.content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        plain = plain.replace(/```[\s\S]*?```/g, 'Code block omitted.').replace(/[#*_`\[\]]/g, '');
+        if (!plain) return;
+        if (D.ttsText) D.ttsText.value = plain;
+        if (typeof switchMode === 'function') {
+          switchMode('tts');
+        }
+        generateTts();
+      }
+
+      function renderMd(text, isStreaming = false, thinkTimerSec = null) {
+        if (!text) return isStreaming ? '<span class="stream-cursor"></span>' : '';
+        if (typeof marked === 'undefined')
+          return esc(text).replace(/\n/g, '<br>') + (isStreaming ? '<span class="stream-cursor"></span>' : '');
+
+        let processed = text;
+        // Format <think>...</think> reasoning blocks cleanly
+        const thinkMatch = processed.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
+        let thinkHtml = '';
+        if (thinkMatch) {
+          const thinkContent = thinkMatch[1].trim();
+          const isThinkingActive = !processed.includes('</think>');
+          if (thinkContent || isThinkingActive) {
+            let parsedThink = '';
+            try {
+              parsedThink = marked.parse(thinkContent || 'Analyzing request...', { breaks: true });
+            } catch (e) {
+              parsedThink = esc(thinkContent || 'Analyzing request...').replace(/\n/g, '<br>');
+            }
+
+            const timerStr = thinkTimerSec ? ` (${thinkTimerSec}s)` : '';
+            const hdrTitle = isThinkingActive ? `Thinking${timerStr}...` : 'Reasoning Process';
+            const isCollapsed = !isThinkingActive && !isStreaming;
+
+            thinkHtml = `<div class="think-box ${isThinkingActive ? 'thinking' : ''} ${isCollapsed ? 'collapsed' : ''}">
+              <div class="think-hdr" onclick="toggleThinkBox(this)" title="Click to toggle reasoning">
+                <div class="think-hdr-left">
+                  <i class="fa-solid fa-brain ${isThinkingActive ? 'fa-spin pulse-brain' : ''}"></i>
+                  <span>${hdrTitle}</span>
+                </div>
+                <i class="fa-solid fa-chevron-down think-chevron"></i>
+              </div>
+              <div class="think-body">${parsedThink}</div>
+            </div>`;
+          }
+          processed = processed.replace(/<think>[\s\S]*?(?:<\/think>|$)/i, '').trim();
+        }
+
+        let streamingText = processed;
+        if (isStreaming && streamingText) {
+          // Balance code fences during live streaming
+          const codeBlockCount = (streamingText.match(/```/g) || []).length;
+          if (codeBlockCount % 2 !== 0) {
+            streamingText += '\n```';
+          }
+        }
+
+        let parsedHtml = '';
+        if (streamingText) {
+          try {
+            parsedHtml = marked.parse(streamingText, { breaks: true });
+          } catch (e) {
+            parsedHtml = esc(streamingText).replace(/\n/g, '<br>');
+          }
+        }
+
+        if (isStreaming) {
+          parsedHtml = (parsedHtml || '') + '<span class="stream-cursor"></span>';
+        }
+
+        return thinkHtml + parsedHtml;
+      }
+
+      // ── Rendering ──────────────────────────────────────────────
       function renderSB() {
         D.cvList.innerHTML = S.convs
           .map(
@@ -4429,25 +4802,38 @@
       }
 
       function renderAI(msg, isLast) {
-        const parsed =
-          S.streaming && isLast ? esc(msg.content) : renderMd(msg.content);
-        const actions =
-          !S.streaming || !isLast
-            ? `
-        <div class="mact">
-            <button class="mab" onclick="copyMsg('${msg.id}')" title="Copy"><i class="fa-regular fa-copy"></i></button>
-            <button class="mab ${msg.liked ? 'lk' : ''}" onclick="rateMsg('${msg.id}','like')" title="Good response"><i class="fa-regular fa-thumbs-up"></i></button>
-            <button class="mab ${msg.disliked ? 'dlk' : ''}" onclick="rateMsg('${msg.id}','dislike')" title="Bad response"><i class="fa-regular fa-thumbs-down"></i></button>
-        </div>`
-            : '';
+        const isCurrentlyStreaming = S.streaming && isLast;
+        const parsed = renderMd(msg.content, isCurrentlyStreaming);
 
-        return `<div class="mr">
-        <div class="ma ai"><svg viewBox="0 0 24 24"><path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="white"/></svg></div>
-        <div class="mc"><div class="mt">${parsed || ''}</div>${actions}</div>
-    </div>`;
+        let statsHtml = '';
+        if (msg.stats && msg.stats.tps) {
+          statsHtml = `<div class="msg-stats-pill" title="${msg.stats.tokens || 0} tokens in ${msg.stats.duration || 0}s">
+            <i class="fa-solid fa-bolt" style="color:var(--grad1)"></i>
+            <span>${msg.stats.tps} tok/s</span>
+            <span class="dot-sep">•</span>
+            <span>${msg.stats.duration}s</span>
+          </div>`;
+        }
+
+        const actions = !isCurrentlyStreaming
+          ? `<div class="mact">
+              ${statsHtml}
+              <div class="mact-btns">
+                <button class="mab" onclick="copyMsg('${msg.id}')" title="Copy response"><i class="fa-regular fa-copy"></i></button>
+                <button class="mab" onclick="speakMsg('${msg.id}')" title="Read aloud (TTS)"><i class="fa-solid fa-volume-high"></i></button>
+                <button class="mab ${msg.liked ? 'lk' : ''}" onclick="rateMsg('${msg.id}','like')" title="Good response"><i class="fa-regular fa-thumbs-up"></i></button>
+                <button class="mab ${msg.disliked ? 'dlk' : ''}" onclick="rateMsg('${msg.id}','dislike')" title="Bad response"><i class="fa-regular fa-thumbs-down"></i></button>
+              </div>
+            </div>`
+          : '';
+
+        return `<div class="mr ${isCurrentlyStreaming ? 'is-streaming' : ''}">
+          <div class="ma ai"><svg viewBox="0 0 24 24"><path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="white"/></svg></div>
+          <div class="mc"><div class="mt">${parsed || ''}</div>${actions}</div>
+        </div>`;
       }
 
-      // ÔöÇÔöÇ Actions ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+      // ── Actions ────────────────────────────────────────────────
       function copyMsg(id) {
         const m = getConv()?.msgs.find((x) => x.id === id);
         if (m)
@@ -4511,9 +4897,54 @@
         D.inp.style.height = 'auto';
         D.inp.style.height = Math.min(D.inp.scrollHeight, 200) + 'px';
       }
-      function scrollEnd() {
-        D.chat.scrollTop = D.chat.scrollHeight;
+
+      let userIsScrolledUp = false;
+
+      function initScrollListener() {
+        if (!D.chat) return;
+        D.chat.addEventListener(
+          'scroll',
+          () => {
+            const threshold = 100;
+            const distanceToBottom =
+              D.chat.scrollHeight - D.chat.scrollTop - D.chat.clientHeight;
+            userIsScrolledUp = distanceToBottom > threshold;
+            const btn = document.getElementById('scroll-bottom-btn');
+            if (btn) {
+              if (userIsScrolledUp && (S.streaming || D.chat.scrollTop > 300)) {
+                btn.classList.add('visible');
+              } else {
+                btn.classList.remove('visible');
+              }
+            }
+          },
+          { passive: true },
+        );
       }
+
+      function smartScroll() {
+        if (!D.chat) return;
+        if (!userIsScrolledUp) {
+          D.chat.scrollTop = D.chat.scrollHeight;
+        }
+      }
+
+      function scrollEnd() {
+        if (!D.chat) return;
+        userIsScrolledUp = false;
+        D.chat.scrollTop = D.chat.scrollHeight;
+        const btn = document.getElementById('scroll-bottom-btn');
+        if (btn) btn.classList.remove('visible');
+      }
+
+      function scrollToBottomSmooth() {
+        if (!D.chat) return;
+        userIsScrolledUp = false;
+        D.chat.scrollTo({ top: D.chat.scrollHeight, behavior: 'smooth' });
+        const btn = document.getElementById('scroll-bottom-btn');
+        if (btn) btn.classList.remove('visible');
+      }
+
       function updateTitle() {
         D.tbTitle.textContent = getConv()?.title || '';
       }

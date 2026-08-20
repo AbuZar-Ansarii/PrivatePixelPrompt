@@ -1879,18 +1879,19 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(body_bytes)
                     return
 
-                while True:
-                    chunk = response.read(4096)
-                    if not chunk:
-                        break
-                    
-                    if LLAMA_CPP_MODE and is_stream and ollama_path == "/api/chat":
-                        # Translate llama.cpp SSE to Ollama JSONL (simplified)
-                        text = chunk.decode(errors="ignore")
-                        for line in text.split("\n"):
-                            if line.startswith("data: ") and line[6:].strip() != "[DONE]":
+                if is_stream:
+                    # Stream line-by-line immediately without buffering delay
+                    while True:
+                        line = response.readline()
+                        if not line:
+                            break
+                        
+                        if LLAMA_CPP_MODE and ollama_path == "/api/chat":
+                            # Translate llama.cpp SSE to Ollama JSONL (simplified)
+                            text = line.decode(errors="ignore")
+                            if text.startswith("data: ") and text[6:].strip() != "[DONE]":
                                 try:
-                                    j = json.loads(line[6:])
+                                    j = json.loads(text[6:])
                                     if "choices" in j and len(j["choices"]) > 0:
                                         out = {
                                             "message": {"role": "assistant", "content": j["choices"][0].get("delta", {}).get("content", "")},
@@ -1898,11 +1899,19 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                                         }
                                         self.wfile.write((json.dumps(out) + "\n").encode())
                                         self.wfile.flush()
-                                except: pass
-                    else:
+                                except Exception:
+                                    pass
+                        else:
+                            self.wfile.write(line)
+                            self.wfile.flush()
+                    return
+                else:
+                    while True:
+                        chunk = response.read(8192)
+                        if not chunk:
+                            break
                         self.wfile.write(chunk)
-                        if is_stream: self.wfile.flush()
-                return # Done with successful proxy
+                    return # Done with successful proxy
 
             except urllib.error.HTTPError as e:
                 # Forward Ollama's HTTP error directly (e.g. 400, 404, 500)
