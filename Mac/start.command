@@ -20,11 +20,20 @@ mkdir -p "$OLLAMA_RUNTIME"
 # ---- Full portability: keep EVERYTHING on the USB ----
 export OLLAMA_MODELS="$SHARED_DIR/models/ollama_data"
 export OLLAMA_HOME="$OLLAMA_RUNTIME"
-export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME/runners"
 export OLLAMA_TMPDIR="$OLLAMA_RUNTIME/tmp"
 export OLLAMA_ORIGINS="*"
 export OLLAMA_HOST="127.0.0.1:11435"
-mkdir -p "$OLLAMA_RUNTIME/runners" "$OLLAMA_RUNTIME/tmp"
+mkdir -p "$OLLAMA_RUNTIME/tmp"
+
+# Point to bundled lib/runners only if they exist on disk
+if [ -d "$SHARED_DIR/bin/lib/ollama" ]; then
+    export OLLAMA_LIBRARY_PATH="$SHARED_DIR/bin/lib/ollama"
+fi
+if [ -d "$SHARED_DIR/bin/lib/ollama/runners" ]; then
+    export OLLAMA_RUNNERS_DIR="$SHARED_DIR/bin/lib/ollama/runners"
+else
+    unset OLLAMA_RUNNERS_DIR 2>/dev/null || true
+fi
 # -------------------------------------------------------
 
 # Check if the portable Mac engine is downloaded

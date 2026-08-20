@@ -521,25 +521,44 @@ def _start_ollama():
         return False
     try:
         env = os.environ.copy()
+        runtime_dir = os.path.join(SCRIPT_DIR, ".ollama-runtime")
+        os.makedirs(runtime_dir, exist_ok=True)
+        os.makedirs(os.path.join(runtime_dir, "tmp"), exist_ok=True)
+        env["HOME"] = runtime_dir
+        env["OLLAMA_HOME"] = runtime_dir
         env["OLLAMA_MODELS"] = os.path.join(SCRIPT_DIR, "models", "ollama_data")
+        env["OLLAMA_TMPDIR"] = os.path.join(runtime_dir, "tmp")
         env["OLLAMA_ORIGINS"] = "*"
         env["OLLAMA_HOST"] = "127.0.0.1:11435"
-        env["OLLAMA_LIBRARY_PATH"] = os.path.join(SCRIPT_DIR, "bin", "lib", "ollama")
 
-        # Enable GPU acceleration (AMD Radeon / Vulkan / ROCm / NVIDIA CUDA / Intel)
-        env["OLLAMA_VULKAN"] = "1"
-        env["OLLAMA_IGPU_ENABLE"] = "1"
-        if SYSTEM_GPUS.get("amd"):
-            env["HSA_OVERRIDE_GFX_VERSION"] = "10.3.0"
-            env["HIP_VISIBLE_DEVICES"] = "0"
-            env["GGML_VK_VISIBLE_DEVICES"] = "0"
-            print("[OLLAMA] Configured AMD Radeon GPU acceleration (Vulkan / ROCm).")
-        elif SYSTEM_GPUS.get("nvidia"):
-            env["CUDA_VISIBLE_DEVICES"] = "0"
-            print("[OLLAMA] Configured NVIDIA GPU acceleration (CUDA).")
-        elif SYSTEM_GPUS.get("intel"):
-            env["GGML_VK_VISIBLE_DEVICES"] = "0"
-            print("[OLLAMA] Configured Intel GPU acceleration (Vulkan).")
+        lib_dir = os.path.join(SCRIPT_DIR, "bin", "lib", "ollama")
+        if os.path.isdir(lib_dir):
+            env["OLLAMA_LIBRARY_PATH"] = lib_dir
+        if os.path.isdir(os.path.join(lib_dir, "runners")):
+            env["OLLAMA_RUNNERS_DIR"] = os.path.join(lib_dir, "runners")
+        else:
+            env.pop("OLLAMA_RUNNERS_DIR", None)
+
+        plat = platform.system()
+        # Enable GPU acceleration
+        if plat == "Darwin":
+            # On macOS (Apple Silicon Metal & Intel), Ollama handles Metal natively.
+            # Do NOT set Vulkan/ROCm variables on Darwin.
+            pass
+        else:
+            env["OLLAMA_VULKAN"] = "1"
+            env["OLLAMA_IGPU_ENABLE"] = "1"
+            if SYSTEM_GPUS.get("amd"):
+                env["HSA_OVERRIDE_GFX_VERSION"] = "10.3.0"
+                env["HIP_VISIBLE_DEVICES"] = "0"
+                env["GGML_VK_VISIBLE_DEVICES"] = "0"
+                print("[OLLAMA] Configured AMD Radeon GPU acceleration (Vulkan / ROCm).")
+            elif SYSTEM_GPUS.get("nvidia"):
+                env["CUDA_VISIBLE_DEVICES"] = "0"
+                print("[OLLAMA] Configured NVIDIA GPU acceleration (CUDA).")
+            elif SYSTEM_GPUS.get("intel"):
+                env["GGML_VK_VISIBLE_DEVICES"] = "0"
+                print("[OLLAMA] Configured Intel GPU acceleration (Vulkan).")
 
         subprocess.Popen([OLLAMA_BIN, "serve"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # Wait for it to be ready
@@ -1790,12 +1809,66 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                         if is_stream: self.wfile.flush()
                 return # Done with successful proxy
 
+            except urllib.error.HTTPError as e:
+                # Forward Ollama's HTTP error directly (e.g. 400, 404, 500)
+                _log_event(logging.WARNING, f"Ollama returned HTTP {e.code}: {e.reason}", request_context=request_context)
+                self.send_response(e.code)
+                for header, value in e.headers.items():
+                    if header.lower() not in ("transfer-encoding", "connection", "content-length"):
+                        self.send_header(header, value)
+                self._cors_headers()
+                self.end_headers()
+                self.wfile.write(e.read())
+                return
             except urllib.error.URLError as e:
                 last_error = e
                 continue # Try next host
             except Exception as e:
                 last_error = e
                 break
+
+        # If connection failed, check if we can auto-start Ollama and retry once
+        if not _is_ollama_running() and OLLAMA_BIN and os.path.isfile(OLLAMA_BIN):
+            _log_event(logging.INFO, "Ollama not running; auto-starting...", request_context=request_context)
+            if _start_ollama():
+                try:
+                    retry_url = OLLAMA_HOST + ( "/v1/chat/completions" if LLAMA_CPP_MODE and ollama_path == "/api/chat" else ollama_path )
+                    req = urllib.request.Request(
+                        retry_url,
+                        data=body,
+                        method=method,
+                        headers={"Content-Type": self.headers.get("Content-Type", "application/json")}
+                    )
+                    if "Authorization" in self.headers:
+                        req.add_header("Authorization", self.headers.get("Authorization"))
+                    proxy_handler = urllib.request.ProxyHandler({})
+                    opener = urllib.request.build_opener(proxy_handler)
+                    response = opener.open(req, timeout=600)
+                    self.send_response(response.status)
+                    is_stream = ("/api/chat" in ollama_path or "/api/generate" in ollama_path)
+                    for header, value in response.getheaders():
+                        if header.lower() not in ("transfer-encoding", "connection", "content-length"):
+                            self.send_header(header, value)
+                    self._cors_headers()
+                    self.end_headers()
+                    while True:
+                        chunk = response.read(4096)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                        if is_stream: self.wfile.flush()
+                    return
+                except urllib.error.HTTPError as e:
+                    self.send_response(e.code)
+                    for header, value in e.headers.items():
+                        if header.lower() not in ("transfer-encoding", "connection", "content-length"):
+                            self.send_header(header, value)
+                    self._cors_headers()
+                    self.end_headers()
+                    self.wfile.write(e.read())
+                    return
+                except Exception as retry_e:
+                    last_error = retry_e
 
         # If we reach here, all hosts failed
         _log_event(logging.ERROR, f"Ollama proxy failed: {str(last_error)}", request_context=request_context)

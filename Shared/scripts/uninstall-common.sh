@@ -152,9 +152,16 @@ remove_ollama_aliases() {
   export OLLAMA_HOST="127.0.0.1:11435"
   export OLLAMA_ORIGINS="*"
   export OLLAMA_HOME="$OLLAMA_RUNTIME_SHARED"
-  export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME_SHARED/runners"
   export OLLAMA_TMPDIR="$OLLAMA_RUNTIME_SHARED/tmp"
-  mkdir -p "$OLLAMA_RUNNERS_DIR" "$OLLAMA_TMPDIR"
+  mkdir -p "$OLLAMA_TMPDIR"
+  if [ -d "$BIN_DIR/lib/ollama" ]; then
+    export OLLAMA_LIBRARY_PATH="$BIN_DIR/lib/ollama"
+  fi
+  if [ -d "$BIN_DIR/lib/ollama/runners" ]; then
+    export OLLAMA_RUNNERS_DIR="$BIN_DIR/lib/ollama/runners"
+  else
+    unset OLLAMA_RUNNERS_DIR 2>/dev/null || true
+  fi
 
   stop_engines
   sleep 1

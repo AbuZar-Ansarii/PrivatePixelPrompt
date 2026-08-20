@@ -482,17 +482,26 @@ else
     fi
 
     if [ ! -f "$OLLAMA_BIN" ]; then
-        echo -e "      Downloading Ollama engine (streaming - stops after binary extracted)..."
-        # Stream curl → tar: 'ollama' is the first entry in the tgz,
-        # so tar exits as soon as it extracts it and the download stops early.
-        curl -L --fail "$ARCHIVE_URL" | \
-            tar -xzf - -C "$SHARED_BIN" ollama 2>/dev/null
+        echo -e "      Downloading Ollama engine..."
+        TEMP_EXTRACT="$SHARED_BIN/temp_ollama"
+        rm -rf "$TEMP_EXTRACT"
+        mkdir -p "$TEMP_EXTRACT"
+        curl -L --fail "$ARCHIVE_URL" | tar -xzf - -C "$TEMP_EXTRACT" 2>/dev/null
         PIPE_RC=${PIPESTATUS[1]}
 
-        # Rename extracted 'ollama' -> 'ollama-darwin'
-        if [ -f "$SHARED_BIN/ollama" ]; then
-            mv "$SHARED_BIN/ollama" "$OLLAMA_BIN"
+        # Locate extracted binary
+        if [ -f "$TEMP_EXTRACT/bin/ollama" ]; then
+            mv "$TEMP_EXTRACT/bin/ollama" "$OLLAMA_BIN"
+        elif [ -f "$TEMP_EXTRACT/ollama" ]; then
+            mv "$TEMP_EXTRACT/ollama" "$OLLAMA_BIN"
         fi
+
+        # Preserve lib folder if present
+        if [ -d "$TEMP_EXTRACT/lib" ]; then
+            mkdir -p "$SHARED_BIN/lib"
+            cp -R "$TEMP_EXTRACT/lib/"* "$SHARED_BIN/lib/" 2>/dev/null || true
+        fi
+        rm -rf "$TEMP_EXTRACT"
 
         if [ "$PIPE_RC" -ne 0 ] || ! is_macho "$OLLAMA_BIN"; then
             echo -e "${RED}      ERROR: Extraction failed or binary is invalid!${RST}"
@@ -674,13 +683,21 @@ if [ ! -x "$OLLAMA_BIN" ]; then
     echo -e "${RED}      Please re-run the installer to download Ollama.${RST}"
 else
     OLLAMA_RUNTIME="$OLLAMA_DATA/../.ollama-runtime"
-    mkdir -p "$OLLAMA_RUNTIME/runners" "$OLLAMA_RUNTIME/tmp"
+    mkdir -p "$OLLAMA_RUNTIME/tmp"
     export OLLAMA_MODELS="$OLLAMA_DATA"
     export OLLAMA_HOME="$OLLAMA_RUNTIME"
-    export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME/runners"
     export OLLAMA_TMPDIR="$OLLAMA_RUNTIME/tmp"
     export OLLAMA_ORIGINS="*"
     export OLLAMA_HOST="127.0.0.1:11435"
+
+    if [ -d "$SHARED_BIN/lib/ollama" ]; then
+        export OLLAMA_LIBRARY_PATH="$SHARED_BIN/lib/ollama"
+    fi
+    if [ -d "$SHARED_BIN/lib/ollama/runners" ]; then
+        export OLLAMA_RUNNERS_DIR="$SHARED_BIN/lib/ollama/runners"
+    else
+        unset OLLAMA_RUNNERS_DIR 2>/dev/null || true
+    fi
 
     # Kill any stale Ollama process
     pkill -f "ollama-darwin" 2>/dev/null

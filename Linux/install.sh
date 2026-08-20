@@ -692,13 +692,21 @@ if [ ! -x "$OLLAMA_BIN" ]; then
     echo -e "${RED}      Please re-run the installer to download Ollama.${RST}"
 else
     OLLAMA_RUNTIME="$OLLAMA_DATA/../.ollama-runtime"
-    mkdir -p "$OLLAMA_RUNTIME/runners" "$OLLAMA_RUNTIME/tmp"
+    mkdir -p "$OLLAMA_RUNTIME/tmp"
     export OLLAMA_MODELS="$OLLAMA_DATA"
     export OLLAMA_HOME="$OLLAMA_RUNTIME"
-    export OLLAMA_RUNNERS_DIR="$OLLAMA_RUNTIME/runners"
     export OLLAMA_TMPDIR="$OLLAMA_RUNTIME/tmp"
     export OLLAMA_ORIGINS="*"
     export OLLAMA_HOST="127.0.0.1:11435"
+
+    if [ -d "$SHARED_BIN/lib/ollama" ]; then
+        export OLLAMA_LIBRARY_PATH="$SHARED_BIN/lib/ollama"
+    fi
+    if [ -d "$SHARED_BIN/lib/ollama/runners" ]; then
+        export OLLAMA_RUNNERS_DIR="$SHARED_BIN/lib/ollama/runners"
+    else
+        unset OLLAMA_RUNNERS_DIR 2>/dev/null || true
+    fi
 
     # Kill any stale Ollama process
     pkill -f "ollama-linux" 2>/dev/null
