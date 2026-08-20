@@ -54,6 +54,9 @@ fi
 # Ensure executable permissions & strip quarantine flags if needed
 chmod +x "$SHARED_DIR/bin/ollama-darwin" 2>/dev/null || true
 xattr -d com.apple.quarantine "$SHARED_DIR/bin/ollama-darwin" 2>/dev/null || true
+[ -f "$SHARED_DIR/bin/sd-mac/sd" ] && chmod +x "$SHARED_DIR/bin/sd-mac/sd" 2>/dev/null || true
+[ -f "$SHARED_DIR/bin/sd-mac/sd-cli" ] && chmod +x "$SHARED_DIR/bin/sd-mac/sd-cli" 2>/dev/null || true
+[ -f "$SHARED_DIR/bin/piper/piper" ] && chmod +x "$SHARED_DIR/bin/piper/piper" 2>/dev/null || true
 
 # Cleanup helper on exit
 cleanup() {
