@@ -564,11 +564,89 @@ def _start_ollama():
         # Wait for it to be ready
         for _ in range(30):
             if _is_ollama_running():
+                # Trigger model registration if needed
+                threading.Thread(target=_auto_register_models_if_needed, daemon=True).start()
                 return True
             time.sleep(1)
         return False
     except Exception:
         return False
+
+def _auto_register_models_if_needed():
+    """Ensure any Modelfiles or GGUFs in Shared/models are registered into Ollama if /api/tags is empty."""
+    if not _is_ollama_running() or not OLLAMA_BIN or not os.path.isfile(OLLAMA_BIN):
+        return
+    
+    models_dir = os.path.join(SCRIPT_DIR, "models")
+    if not os.path.isdir(models_dir):
+        return
+
+    # Check existing models in Ollama
+    try:
+        req = urllib.request.Request(OLLAMA_HOST + "/api/tags", method="GET")
+        proxy_handler = urllib.request.ProxyHandler({})
+        opener = urllib.request.build_opener(proxy_handler)
+        with opener.open(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode())
+            existing_models = data.get("models", [])
+            if len(existing_models) > 0:
+                return
+    except Exception:
+        pass
+
+    # No models found in Ollama - register Modelfiles and GGUFs
+    print("[OLLAMA] Auto-registering models from Shared/models...")
+    env = os.environ.copy()
+    runtime_dir = os.path.join(SCRIPT_DIR, ".ollama-runtime")
+    env["HOME"] = runtime_dir
+    env["OLLAMA_HOME"] = runtime_dir
+    env["OLLAMA_MODELS"] = os.path.join(models_dir, "ollama_data")
+    env["OLLAMA_TMPDIR"] = os.path.join(runtime_dir, "tmp")
+    env["OLLAMA_ORIGINS"] = "*"
+    env["OLLAMA_HOST"] = "127.0.0.1:11435"
+    lib_dir = os.path.join(SCRIPT_DIR, "bin", "lib", "ollama")
+    if os.path.isdir(lib_dir):
+        env["OLLAMA_LIBRARY_PATH"] = lib_dir
+
+    registered_any = False
+    # 1. Register from existing Modelfile-* files
+    for fname in sorted(os.listdir(models_dir)):
+        if fname.startswith("Modelfile-") and os.path.isfile(os.path.join(models_dir, fname)):
+            tag_name = fname[len("Modelfile-"):]
+            print(f"[OLLAMA] Registering model '{tag_name}' from {fname}...")
+            try:
+                subprocess.run(
+                    [OLLAMA_BIN, "create", tag_name, "-f", fname],
+                    cwd=models_dir,
+                    env=env,
+                    capture_output=True,
+                    timeout=90
+                )
+                registered_any = True
+            except Exception as e:
+                print(f"[OLLAMA] Warning: Failed to register {tag_name}: {e}")
+
+    # 2. If no Modelfiles found, check for raw .gguf files
+    if not registered_any:
+        for fname in sorted(os.listdir(models_dir)):
+            if fname.endswith(".gguf") and os.path.isfile(os.path.join(models_dir, fname)):
+                tag_name = fname[:-5].lower()
+                tag_name = re.sub(r'[^a-z0-9._-]', '-', tag_name) + "-local"
+                mf_name = f"Modelfile-{tag_name}"
+                mf_path = os.path.join(models_dir, mf_name)
+                try:
+                    with open(mf_path, "w", encoding="utf-8") as f:
+                        f.write(f"FROM ./{fname}\nPARAMETER temperature 0.7\nPARAMETER top_p 0.9\n")
+                    print(f"[OLLAMA] Registering model '{tag_name}' from {fname}...")
+                    subprocess.run(
+                        [OLLAMA_BIN, "create", tag_name, "-f", mf_name],
+                        cwd=models_dir,
+                        env=env,
+                        capture_output=True,
+                        timeout=90
+                    )
+                except Exception as e:
+                    print(f"[OLLAMA] Warning: Failed to register {tag_name}: {e}")
 
 def _parse_sd_output(pipe, job_id, total_steps):
     """Read sd stdout+stderr in real-time byte-by-byte.
@@ -1783,7 +1861,24 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                 self._cors_headers()
                 self.end_headers()
 
-                # Stream chunks
+                # Stream chunks or handle /api/tags
+                if ollama_path == "/api/tags":
+                    body_bytes = response.read()
+                    try:
+                        tags_data = json.loads(body_bytes.decode())
+                        if not tags_data.get("models") or len(tags_data["models"]) == 0:
+                            _auto_register_models_if_needed()
+                            try:
+                                updated_req = urllib.request.Request(target_url, method="GET")
+                                with opener.open(updated_req, timeout=5) as uresp:
+                                    body_bytes = uresp.read()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                    self.wfile.write(body_bytes)
+                    return
+
                 while True:
                     chunk = response.read(4096)
                     if not chunk:

@@ -3280,12 +3280,18 @@
         );
       }
 
-      async function fetchModels() {
+      async function fetchModels(retries = 3) {
         try {
           const r = await fetch(OLLAMA + '/api/tags');
           if (!r.ok) throw new Error();
           const d = await r.json();
           S.models = d.models || [];
+          if (!S.models.length && retries > 0) {
+            D.modelMenu.innerHTML =
+              '<div style="padding:16px;font-size:12px;color:var(--text-dim);text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Loading Models...</div>';
+            setTimeout(() => fetchModels(retries - 1), 2000);
+            return;
+          }
           renderModelMenu();
           if (
             S.models.length &&
@@ -3294,6 +3300,9 @@
             applyModel(S.models[0].name);
           } else if (S.model) {
             applyModel(S.model);
+          } else if (!S.models.length) {
+            D.modelMenu.innerHTML =
+              '<div style="padding:16px;font-size:12px;color:var(--red);text-align:center;">No Models Found</div>';
           }
         } catch {
           D.modelMenu.innerHTML =

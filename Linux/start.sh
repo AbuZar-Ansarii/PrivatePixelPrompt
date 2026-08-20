@@ -78,6 +78,39 @@ else
     echo "[OK] Engine is online!"
 fi
 
+# Ensure models are registered in the Linux engine
+TAGS_JSON=$(curl -s http://127.0.0.1:11435/api/tags 2>/dev/null || echo "{}")
+TAGS_COUNT=$(echo "$TAGS_JSON" | grep -o '"name":' | wc -l | tr -d ' ')
+if [ "$TAGS_COUNT" -eq 0 ]; then
+    echo "Registering available models with Linux AI Engine..."
+    cd "$SHARED_DIR/models" 2>/dev/null || true
+    for mf in Modelfile-*; do
+        if [ -f "$mf" ]; then
+            TAG_NAME="${mf#Modelfile-}"
+            echo "  [+] Registering $TAG_NAME..."
+            HOME="$OLLAMA_RUNTIME" "$SHARED_DIR/bin/ollama-linux" create "$TAG_NAME" -f "$mf" >/dev/null 2>&1 || true
+        fi
+    done
+    if [ ! -f Modelfile-* ] 2>/dev/null && [ -f Modelfile ]; then
+        HOME="$OLLAMA_RUNTIME" "$SHARED_DIR/bin/ollama-linux" create "default-model" -f "Modelfile" >/dev/null 2>&1 || true
+    fi
+    # Also check for raw .gguf files if still 0
+    TAGS_JSON=$(curl -s http://127.0.0.1:11435/api/tags 2>/dev/null || echo "{}")
+    TAGS_COUNT=$(echo "$TAGS_JSON" | grep -o '"name":' | wc -l | tr -d ' ')
+    if [ "$TAGS_COUNT" -eq 0 ]; then
+        for gf in *.gguf; do
+            if [ -f "$gf" ]; then
+                BASE_TAG=$(basename "$gf" .gguf | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
+                echo "FROM ./$gf" > "Modelfile-$BASE_TAG"
+                echo "PARAMETER temperature 0.7" >> "Modelfile-$BASE_TAG"
+                echo "PARAMETER top_p 0.9" >> "Modelfile-$BASE_TAG"
+                echo "  [+] Registering $BASE_TAG from $gf..."
+                HOME="$OLLAMA_RUNTIME" "$SHARED_DIR/bin/ollama-linux" create "$BASE_TAG" -f "Modelfile-$BASE_TAG" >/dev/null 2>&1 || true
+            fi
+        done
+    fi
+fi
+
 echo ""
 echo "==================================================="
 echo "  AI ENGINE IS RUNNING"
