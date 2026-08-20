@@ -9,6 +9,10 @@
 With a unified architecture, you can initialize your AI models once and carry them with you across **Windows, macOS, Linux, and Android (Termux)**.
 
 ---
+<img width="1402" height="1122" alt="PrivatePixelPrompt Generated Images" src="https://github.com/user-attachments/assets/cceb1f4a-b062-472f-be78-a9eb8d43321d" />
+
+<img width="1402" height="1122" alt="generated image by private pixel prompt" src="https://github.com/user-attachments/assets/73c9f9de-418e-47ba-bed4-0388d5f3b482" />
+
 
 ## Core Features
 
